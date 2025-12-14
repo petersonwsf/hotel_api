@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra;
+package com.hotel.hotel.infra.exceptions;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

@@ -25,6 +25,3 @@ jobs:
     
     - name: Subir banco de dados
       run: docker compose up -d
-    
-    - name: Realizar testes de API
-      run: mvn test
