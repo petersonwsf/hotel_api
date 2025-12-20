@@ -1,14 +1,18 @@
 package com.hotel.hotel.domain.client;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hotel.hotel.domain.contactInformation.ContactInformation;
+import com.hotel.hotel.domain.reservation.Reservation;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +35,10 @@ public class Client {
 
     @Embedded
     private ContactInformation contactInformation;
+
+    @OneToMany(mappedBy = "client")
+    @JsonIgnore
+    private List<Reservation> reservations;
 
     public Client(ClientSaveDTO data) {
         this.deleted = false;

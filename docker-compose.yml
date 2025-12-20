@@ -8,3 +8,9 @@ services:
       - POSTGRESQL_USERNAME=root
       - POSTGRESQL_PASSWORD=root
       - POSTGRESQL_DATABASE=reservaHotel
+    volumes:
+      - postgres_data:/bitnami/postgresql
+
+volumes:
+  postgres_data:
+    driver: local
