@@ -3,9 +3,12 @@ package com.hotel.hotel.domain.client;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.hotel.hotel.domain.contactInformation.ContactInformation;
 import com.hotel.hotel.domain.contactInformation.ContactInformationDTO;
+import com.hotel.hotel.domain.reservation.Reservation;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +20,7 @@ class ClientTest {
         "(81) 99999-9999","Rua X","Centro","123","Casinhas","PE",null,"55750000"
     );
     Client client = new Client(1L,"Old","12345678901","old@mail.com",
-        LocalDate.of(1990,1,1), false, ci);
+        LocalDate.of(1990,1,1), false, ci, new ArrayList<Reservation>());
 
     ContactInformationDTO ciDto = new ContactInformationDTO(
         "(81) 98888-7777","Nova Rua","Novo Bairro","777","Casinhas","PE","Casa","55750002"
@@ -43,7 +46,7 @@ class ClientTest {
         "(81) 99999-9999","Rua X","Centro","123","Casinhas","PE",null,"55750000"
     );
     Client client = new Client(1L,"Old","12345678901","old@mail.com",
-        LocalDate.of(1990,1,1), false, ci);
+        LocalDate.of(1990,1,1), false, ci, new ArrayList<Reservation>());
 
     ClientEditDTO dto = new ClientEditDTO(1L, null, null, null, null);
 
@@ -62,7 +65,7 @@ class ClientTest {
         "(81) 99999-9999","Rua X","Centro","123","Casinhas","PE",null,"55750000"
     );
     Client client = new Client(1L,"Old","12345678901","old@mail.com",
-        LocalDate.of(1990,1,1), false, ci);
+        LocalDate.of(1990,1,1), false, ci, new ArrayList<Reservation>());
 
     client.delete();
 
