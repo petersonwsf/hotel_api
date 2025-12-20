@@ -1,5 +1,6 @@
 package com.hotel.hotel.controllers;
 
+import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,7 +52,7 @@ public class ReservationController {
         reservation.assignRoom(room);
     
         var days = data.checkOutDate().toEpochDay() - data.checkInDate().toEpochDay();
-        var totalAmount = (data.dailyRate().multiply(java.math.BigDecimal.valueOf(days))).subtract(data.discountAmount()).add(data.serviceFee());
+        var totalAmount = (data.dailyRate().multiply(BigDecimal.valueOf(days))).subtract(data.discountAmount()).add(data.serviceFee());
         reservation.setTotalAmount(totalAmount);
 
         var reservation_response = repository.save(reservation);
@@ -78,7 +79,7 @@ public class ReservationController {
         }
         reservation.edit(data);
 
-        var total_amount = (reservation.getDailyRate().multiply(java.math.BigDecimal.valueOf(reservation.getCheckOutDate().toEpochDay() - reservation.getCheckInDate().toEpochDay())))
+        var total_amount = (reservation.getDailyRate().multiply(BigDecimal.valueOf(reservation.getCheckOutDate().toEpochDay() - reservation.getCheckInDate().toEpochDay())))
             .subtract(reservation.getDiscountAmount())
             .add(reservation.getServiceFee());
 
