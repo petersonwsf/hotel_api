@@ -1,0 +1,91 @@
+package com.hotel.hotel.services;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import com.hotel.hotel.domain.client.Client;
+import com.hotel.hotel.domain.client.ClientDetailsDTO;
+import com.hotel.hotel.domain.client.ClientEditDTO;
+import com.hotel.hotel.domain.client.ClientListDTO;
+import com.hotel.hotel.domain.client.ClientRepository;
+import com.hotel.hotel.domain.client.ClientSaveDTO;
+import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
+import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
+
+@Service
+public class ClientService {
+
+    @Autowired
+    private ClientRepository repository;
+
+    public ClientDetailsDTO create(ClientSaveDTO data) throws ResourceAlreadyExists {
+
+        var emailAlreadyExists = repository.findByEmail(data.email());
+        if (emailAlreadyExists.isPresent()) {
+            throw new ResourceAlreadyExists("Email already used");
+        }
+        var phoneAlreadyExists = repository.findByContactInformation_PhoneNumber(data.contactInformation().phoneNumber());
+        if (phoneAlreadyExists.isPresent()) {
+            throw new ResourceAlreadyExists("Phone number already used");
+        }
+        var pinAlreadyExists = repository.findByPin(data.pin());
+        if (pinAlreadyExists.isPresent()) {
+            throw new ResourceAlreadyExists("Pin already used");
+        }
+        
+        Client client = new Client(data);
+        
+        Client newClient = repository.save(client);
+
+        return new ClientDetailsDTO(newClient);
+    }
+
+    public Page<ClientListDTO> list(Pageable pagination) {
+        var page = repository.findAllByDeletedFalse(pagination).map(ClientListDTO::new);
+        if (page.isEmpty()) {
+            return Page.empty();
+        }
+        return page;
+    }
+
+    public ClientDetailsDTO edit(ClientEditDTO data, Long id) {
+        Client client = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
+        
+        if (data.email() != null) {
+            var emailAlreadyExists = repository.findByEmail(data.email());
+            if (emailAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Email already exists");
+        }
+
+        if (data.contactInformation() != null) {
+            if (data.contactInformation().phoneNumber() != null) {
+                var phoneAlreadyExists = repository.findByContactInformation_PhoneNumber(data.contactInformation().phoneNumber());
+                if (phoneAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Phone number already exists");
+            }
+        }
+
+        client.edit(data);
+
+        return new ClientDetailsDTO(client);
+    }
+
+    public void deleteById(Long id) {
+        Client client = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
+        if (client == null) {
+            throw new ResourceNotFoundException("Client with id " + id + " does not exists");
+        }
+        client.delete();
+    }
+
+    public ClientDetailsDTO getById(Long id) {
+        Client client = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
+        
+        if (client == null) {
+            throw new ResourceNotFoundException("Client with id " + id + " does not exists");
+        }
+        
+        return new ClientDetailsDTO(client);
+    }
+    
+}
