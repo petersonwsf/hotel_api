@@ -58,11 +58,9 @@ public class ClientService {
             if (emailAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Email already exists");
         }
 
-        if (data.contactInformation() != null) {
-            if (data.contactInformation().phoneNumber() != null) {
-                var phoneAlreadyExists = repository.findByContactInformation_PhoneNumber(data.contactInformation().phoneNumber());
-                if (phoneAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Phone number already exists");
-            }
+        if (data.contactInformation() != null && data.contactInformation().phoneNumber() != null) {
+            var phoneAlreadyExists = repository.findByContactInformation_PhoneNumber(data.contactInformation().phoneNumber());
+            if (phoneAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Phone number already exists");
         }
 
         client.edit(data);
