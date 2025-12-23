@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.hotel.hotel.domain.roomTypes.RoomType;
+import com.hotel.hotel.domain.dtos.MessageResponse;
 import com.hotel.hotel.domain.roomTypes.RoomTypeDetailsDTO;
-import com.hotel.hotel.domain.roomTypes.RoomTypeRepository;
 import com.hotel.hotel.domain.roomTypes.RoomTypeSaveDTO;
+import com.hotel.hotel.services.RoomTypeService;
 
 import jakarta.validation.Valid;
 
@@ -27,37 +27,35 @@ import jakarta.validation.Valid;
 public class RoomTypeController {
 
     @Autowired
-    private RoomTypeRepository repository;
+    private RoomTypeService service;
 
     @PostMapping
     @Transactional
     public ResponseEntity register(@RequestBody @Valid RoomTypeSaveDTO data, UriComponentsBuilder uriBuilder) {
-        var roomType = new RoomType(data);
-        repository.save(roomType);
-
-        var uri = uriBuilder.path("/roomType/{id}").buildAndExpand(roomType.getId()).toUri();
-
+        var roomType = service.create(data);
+        var uri = uriBuilder.path("/roomType/{id}").buildAndExpand(roomType.id()).toUri();
         return ResponseEntity.created(uri).body(roomType);
     }
 
     @GetMapping
     public ResponseEntity<Page<RoomTypeDetailsDTO>> list(Pageable pagination) {
-        var pages = repository.findAll(pagination).map(RoomTypeDetailsDTO::new);
+        var pages = service.list(pagination);
         return ResponseEntity.ok(pages);
     }
 
     @PatchMapping("/{id}")
     @Transactional
     public ResponseEntity edit(@RequestBody RoomTypeSaveDTO data, @PathVariable Long id) {
-        var roomType = repository.getReferenceById(id);
-        roomType.edit(data);
-        return ResponseEntity.ok(new RoomTypeDetailsDTO(roomType));
+        var roomType = service.edit(data, id);
+        return ResponseEntity.ok(roomType);
     }
 
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
-        repository.deleteById(id);
-        return ResponseEntity.noContent().build();
+        service.deleteById(id);
+        return ResponseEntity.ok(new MessageResponse("Room type deleted successfully"));
     }
+
+
 }

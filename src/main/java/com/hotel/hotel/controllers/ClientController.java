@@ -19,6 +19,7 @@ import com.hotel.hotel.domain.client.ClientDetailsDTO;
 import com.hotel.hotel.domain.client.ClientEditDTO;
 import com.hotel.hotel.domain.client.ClientListDTO;
 import com.hotel.hotel.domain.client.ClientSaveDTO;
+import com.hotel.hotel.domain.dtos.MessageResponse;
 import com.hotel.hotel.services.ClientService;
 
 import jakarta.validation.Valid;
@@ -62,11 +63,5 @@ public class ClientController {
     public ResponseEntity getClientById(@PathVariable Long id) {
         var client = service.getById(id);
         return ResponseEntity.ok(client);
-    }
-
-    private record MessageResponse(String message) {
-        public MessageResponse(String message) {
-            this.message = message;
-        }
     }
 }

@@ -43,15 +43,12 @@ public class ClientService {
     }
 
     public Page<ClientListDTO> list(Pageable pagination) {
-        var page = repository.findAllByDeletedFalse(pagination).map(ClientListDTO::new);
-        if (page.isEmpty()) {
-            return Page.empty();
-        }
-        return page;
+        return repository.findAllByDeletedFalse(pagination).map(ClientListDTO::new);
     }
 
     public ClientDetailsDTO edit(ClientEditDTO data, Long id) {
-        Client client = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
+        Client client = repository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         
         if (data.email() != null) {
             var emailAlreadyExists = repository.findByEmail(data.email());
@@ -69,20 +66,14 @@ public class ClientService {
     }
 
     public void deleteById(Long id) {
-        Client client = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
-        if (client == null) {
-            throw new ResourceNotFoundException("Client with id " + id + " does not exists");
-        }
+        Client client = repository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         client.delete();
     }
 
     public ClientDetailsDTO getById(Long id) {
-        Client client = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
-        
-        if (client == null) {
-            throw new ResourceNotFoundException("Client with id " + id + " does not exists");
-        }
-        
+        Client client = repository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));   
         return new ClientDetailsDTO(client);
     }
     
