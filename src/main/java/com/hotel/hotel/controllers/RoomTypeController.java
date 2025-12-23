@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hotel.hotel.domain.dtos.MessageResponse;
-import com.hotel.hotel.domain.roomTypes.RoomType;
 import com.hotel.hotel.domain.roomTypes.RoomTypeDetailsDTO;
-import com.hotel.hotel.domain.roomTypes.RoomTypeRepository;
 import com.hotel.hotel.domain.roomTypes.RoomTypeSaveDTO;
 import com.hotel.hotel.services.RoomTypeService;
 
