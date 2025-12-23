@@ -53,15 +53,16 @@ public class Room {
         this.active = true;
     }
 
-    public void edit(RoomEditDTO data, RoomType roomType) {
+    public void edit(RoomEditDTO data) {
         if (data.customPrice() != null) {
             this.customPrice = data.customPrice();
-        }
-        if (roomType != null) {
-            this.roomType = roomType;
         }
         if (data.status() != null) {
             this.status = data.status();
         }
+    }
+
+    public void assignRoomType(RoomType roomType) {
+        this.roomType = roomType;
     }
 }
