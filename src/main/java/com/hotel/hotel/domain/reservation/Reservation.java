@@ -64,14 +64,14 @@ public class Reservation {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    public Reservation(LocalDate checkInDate, LocalDate checkOutDate, BigDecimal dailyRate, BigDecimal discountAmount, BigDecimal serviceFee, Status status, Source source) {
-        this.checkInDate = checkInDate;
-        this.checkOutDate = checkOutDate;
-        this.dailyRate = dailyRate;
-        this.discountAmount = discountAmount;
-        this.serviceFee = serviceFee;
-        this.status = status;
-        this.source = source;
+    public Reservation(ReservationSaveDTO data) {
+        this.checkInDate = data.checkInDate();
+        this.checkOutDate = data.checkOutDate();
+        this.dailyRate = data.dailyRate();
+        this.discountAmount = data.discountAmount();
+        this.serviceFee = data.serviceFee();
+        this.status = data.status();
+        this.source = data.source();
     }
 
     public void edit(ReservationEditDTO data) {

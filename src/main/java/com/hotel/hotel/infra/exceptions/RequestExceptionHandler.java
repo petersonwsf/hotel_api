@@ -27,6 +27,11 @@ public class RequestExceptionHandler {
         return ResponseEntity.status(409).body(new Error(error.getMessage()));
     }
 
+    @ExceptionHandler(RoomNotAvailable.class)
+    public ResponseEntity roomNotAvailable(RoomNotAvailable error) {
+        return ResponseEntity.status(409).body(new Error(error.getMessage()));
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity alreadyExists(ResourceNotFoundException error) {
         return ResponseEntity.status(404).body(new Error(error.getMessage()));
