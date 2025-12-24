@@ -33,21 +33,27 @@ public class RoomTypeController {
     @Transactional
     public ResponseEntity register(@RequestBody @Valid RoomTypeSaveDTO data, UriComponentsBuilder uriBuilder) {
         var roomType = service.create(data);
-        var uri = uriBuilder.path("/roomType/{id}").buildAndExpand(roomType.id()).toUri();
-        return ResponseEntity.created(uri).body(roomType);
+        var uri = uriBuilder.path("/roomType/{id}").buildAndExpand(roomType.getId()).toUri();
+        return ResponseEntity.created(uri).body(new RoomTypeDetailsDTO(roomType));
     }
 
     @GetMapping
     public ResponseEntity<Page<RoomTypeDetailsDTO>> list(Pageable pagination) {
-        var pages = service.list(pagination);
+        var pages = service.list(pagination).map(RoomTypeDetailsDTO::new);
         return ResponseEntity.ok(pages);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RoomTypeDetailsDTO> getDetails(@PathVariable Long id) {
+        var roomType = service.getDetails(id);
+        return ResponseEntity.ok(new RoomTypeDetailsDTO(roomType));
     }
 
     @PatchMapping("/{id}")
     @Transactional
     public ResponseEntity edit(@RequestBody RoomTypeSaveDTO data, @PathVariable Long id) {
         var roomType = service.edit(data, id);
-        return ResponseEntity.ok(roomType);
+        return ResponseEntity.ok(new RoomTypeDetailsDTO(roomType));
     }
 
     @DeleteMapping("/{id}")

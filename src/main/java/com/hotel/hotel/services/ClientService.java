@@ -6,9 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.domain.client.Client;
-import com.hotel.hotel.domain.client.ClientDetailsDTO;
 import com.hotel.hotel.domain.client.ClientEditDTO;
-import com.hotel.hotel.domain.client.ClientListDTO;
 import com.hotel.hotel.domain.client.ClientRepository;
 import com.hotel.hotel.domain.client.ClientSaveDTO;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
@@ -20,7 +18,7 @@ public class ClientService {
     @Autowired
     private ClientRepository repository;
 
-    public ClientDetailsDTO create(ClientSaveDTO data) throws ResourceAlreadyExists {
+    public Client create(ClientSaveDTO data) throws ResourceAlreadyExists {
 
         var emailAlreadyExists = repository.findByEmail(data.email());
         if (emailAlreadyExists.isPresent()) {
@@ -39,14 +37,14 @@ public class ClientService {
         
         Client newClient = repository.save(client);
 
-        return new ClientDetailsDTO(newClient);
+        return newClient;
     }
 
-    public Page<ClientListDTO> list(Pageable pagination) {
-        return repository.findAllByDeletedFalse(pagination).map(ClientListDTO::new);
+    public Page<Client> list(Pageable pagination) {
+        return repository.findAllByDeletedFalse(pagination);
     }
 
-    public ClientDetailsDTO edit(ClientEditDTO data, Long id) {
+    public Client edit(ClientEditDTO data, Long id) {
         Client client = repository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         
@@ -62,7 +60,7 @@ public class ClientService {
 
         client.edit(data);
 
-        return new ClientDetailsDTO(client);
+        return client;
     }
 
     public void deleteById(Long id) {
@@ -71,10 +69,10 @@ public class ClientService {
         client.delete();
     }
 
-    public ClientDetailsDTO getById(Long id) {
+    public Client getById(Long id) {
         Client client = repository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));   
-        return new ClientDetailsDTO(client);
+        return client;
     }
     
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.hotel.hotel.domain.client.Client;
 import com.hotel.hotel.domain.client.ClientDetailsDTO;
 import com.hotel.hotel.domain.client.ClientEditDTO;
 import com.hotel.hotel.domain.client.ClientListDTO;
@@ -34,22 +35,22 @@ public class ClientController {
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid ClientSaveDTO data, UriComponentsBuilder uriBuilder) {
-        var client = service.create(data);
-        var uri = uriBuilder.path("/client/{id}").buildAndExpand(client.id()).toUri();
-        return ResponseEntity.created(uri).body(client);
+        Client client = service.create(data);
+        var uri = uriBuilder.path("/client/{id}").buildAndExpand(client.getId()).toUri();
+        return ResponseEntity.created(uri).body(new ClientDetailsDTO(client));
     }
 
     @GetMapping
     public ResponseEntity<Page<ClientListDTO>> list(Pageable pagination) {
-        var clients = service.list(pagination);
+        var clients = service.list(pagination).map(ClientListDTO::new);
         return ResponseEntity.ok(clients);
     }
     
     @PatchMapping("/{id}")
     @Transactional
     public ResponseEntity edit(@RequestBody @Valid ClientEditDTO data, @PathVariable Long id) {
-        ClientDetailsDTO client = service.edit(data, id);
-        return ResponseEntity.ok(client);
+        Client client = service.edit(data, id);
+        return ResponseEntity.ok(new ClientDetailsDTO(client));
     }
 
     @DeleteMapping("/{id}")
@@ -61,7 +62,7 @@ public class ClientController {
 
     @GetMapping("/{id}")
     public ResponseEntity getClientById(@PathVariable Long id) {
-        var client = service.getById(id);
-        return ResponseEntity.ok(client);
+        Client client = service.getById(id);
+        return ResponseEntity.ok(new ClientDetailsDTO(client));
     }
 }

@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.domain.room.Room;
-import com.hotel.hotel.domain.room.RoomDetailsDTO;
 import com.hotel.hotel.domain.room.RoomEditDTO;
 import com.hotel.hotel.domain.room.RoomRepository;
 import com.hotel.hotel.domain.room.RoomSaveDTO;
@@ -23,7 +22,7 @@ public class RoomService {
     @Autowired
     private RoomTypeRepository roomTypeRepository;
     
-    public RoomDetailsDTO create(RoomSaveDTO data) {
+    public Room create(RoomSaveDTO data) {
         
         var roomCodeAlreadyExists = repository.findByCode(data.code());
 
@@ -38,21 +37,21 @@ public class RoomService {
 
         var newRoom = repository.save(room);
         
-        return new RoomDetailsDTO(newRoom);
+        return newRoom;
     }
 
-    public Page<RoomDetailsDTO> list(Pageable pagination) {
-        return repository.findAll(pagination).map(RoomDetailsDTO::new);
+    public Page<Room> list(Pageable pagination) {
+        return repository.findAll(pagination);
     }
 
-    public RoomDetailsDTO getDetails(Long id) {
+    public Room getDetails(Long id) {
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
         
-        return new RoomDetailsDTO(room);
+        return room;
     }
 
-    public RoomDetailsDTO edit(RoomEditDTO data, Long id) {
+    public Room edit(RoomEditDTO data, Long id) {
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 
@@ -64,7 +63,7 @@ public class RoomService {
 
         room.edit(data);
 
-        return new RoomDetailsDTO(room);
+        return room;
     }
 
     public void delete(Long id) {

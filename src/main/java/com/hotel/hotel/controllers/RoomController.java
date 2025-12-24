@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hotel.hotel.domain.dtos.MessageResponse;
+import com.hotel.hotel.domain.room.Room;
 import com.hotel.hotel.domain.room.RoomDetailsDTO;
 import com.hotel.hotel.domain.room.RoomEditDTO;
 import com.hotel.hotel.domain.room.RoomSaveDTO;
@@ -33,14 +34,14 @@ public class RoomController {
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid RoomSaveDTO data, UriComponentsBuilder uriBuilder) {
-        RoomDetailsDTO room = service.create(data);
-        var uri = uriBuilder.path("/room/{id}").buildAndExpand(room.id()).toUri();
-        return ResponseEntity.created(uri).body(room);
+        Room room = service.create(data);
+        var uri = uriBuilder.path("/room/{id}").buildAndExpand(room.getId()).toUri();
+        return ResponseEntity.created(uri).body(new RoomDetailsDTO(room));
     }
 
     @GetMapping
     public ResponseEntity<Page<RoomDetailsDTO>> list(Pageable pagination) {
-        var rooms = service.list(pagination);
+        var rooms = service.list(pagination).map(RoomDetailsDTO::new);
         return ResponseEntity.ok(rooms);
     }
 
@@ -48,7 +49,7 @@ public class RoomController {
     @Transactional
     public ResponseEntity edit(@RequestBody @Valid RoomEditDTO data, @PathVariable Long id) {
         var room = service.edit(data, id);
-        return ResponseEntity.ok(room);
+        return ResponseEntity.ok(new RoomDetailsDTO(room));
     }
 
     @DeleteMapping("/{id}")

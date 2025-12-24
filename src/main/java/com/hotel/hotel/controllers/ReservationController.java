@@ -1,6 +1,5 @@
 package com.hotel.hotel.controllers;
 
-import java.math.BigDecimal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,14 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.hotel.hotel.domain.client.ClientRepository;
+import com.hotel.hotel.domain.dtos.MessageResponse;
 import com.hotel.hotel.domain.reservation.Reservation;
 import com.hotel.hotel.domain.reservation.ReservationDetailsDTO;
 import com.hotel.hotel.domain.reservation.ReservationEditDTO;
-import com.hotel.hotel.domain.reservation.ReservationRepository;
 import com.hotel.hotel.domain.reservation.ReservationSaveDTO;
-import com.hotel.hotel.domain.reservation.Status;
-import com.hotel.hotel.domain.room.RoomRepository;
+import com.hotel.hotel.services.ReservationService;
 
 import jakarta.validation.Valid;
 
@@ -32,73 +29,39 @@ import jakarta.validation.Valid;
 public class ReservationController {
 
     @Autowired
-    private ReservationRepository repository;
-    
-    @Autowired
-    private ClientRepository clientRepository;
-
-    @Autowired
-    private RoomRepository roomRepository;
+    private ReservationService service;
     
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid ReservationSaveDTO data, UriComponentsBuilder uriBuilder) {
-        
-        var client = clientRepository.getReferenceById(data.clientId());
-        var room = roomRepository.getReferenceById(data.roomId());
-        
-        var reservation = new Reservation(data.checkInDate(), data.checkOutDate(), data.dailyRate(), data.discountAmount(), data.serviceFee(), data.status(), data.source());
-        reservation.assignClient(client);
-        reservation.assignRoom(room);
-    
-        var days = data.checkOutDate().toEpochDay() - data.checkInDate().toEpochDay();
-        var totalAmount = data.dailyRate().multiply(BigDecimal.valueOf(days)).subtract(data.discountAmount()).add(data.serviceFee());
-        reservation.setTotalAmount(totalAmount);
-
-        var reservation_response = repository.save(reservation);
-
+        Reservation reservation = service.create(data);
         var uri = uriBuilder.path("/reservation/{id}").buildAndExpand(reservation.getId()).toUri();
-
-        return ResponseEntity.created(uri).body(new ReservationDetailsDTO(reservation_response));
+        return ResponseEntity.created(uri).body(new ReservationDetailsDTO(reservation));
     }
 
     @GetMapping
     public ResponseEntity<Page<ReservationDetailsDTO>> list(Pageable pagination) {
-        var reservations = repository.findByStatusNot(pagination, Status.CANCELED).map(ReservationDetailsDTO::new);
+        var reservations = service.list(pagination).map(ReservationDetailsDTO::new);
         return ResponseEntity.ok(reservations);
     }
 
     @PatchMapping("/{id}")
     @Transactional
     public ResponseEntity edit(@RequestBody @Valid ReservationEditDTO data, @PathVariable Long id) {
-        
-        Reservation reservation = repository.getReferenceById(id);
-        if (data.roomId() != null) {
-            var room = roomRepository.getReferenceById(data.roomId());
-            reservation.changeRoom(room);
-        }
-        reservation.edit(data);
-
-        var total_amount = reservation.getDailyRate().multiply(BigDecimal.valueOf(reservation.getCheckOutDate().toEpochDay() - reservation.getCheckInDate().toEpochDay()))
-            .subtract(reservation.getDiscountAmount())
-            .add(reservation.getServiceFee());
-
-        reservation.setTotalAmount(total_amount);
-
+        var reservation = service.edit(data, id);
         return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
     }
 
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
-        var reservation = repository.getReferenceById(id);
-        reservation.changeStatus(Status.CANCELED);
-        return ResponseEntity.noContent().build();
+       service.deleteById(id);
+        return ResponseEntity.ok(new MessageResponse("Reservation cancelled succesfully"));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity getById(@PathVariable Long id) {
-        var reservation = repository.getReferenceById(id);
+        var reservation = service.getById(id);
         return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
     }
 }
