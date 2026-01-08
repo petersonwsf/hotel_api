@@ -19,6 +19,7 @@ import com.hotel.hotel.domain.dtos.MessageResponse;
 import com.hotel.hotel.domain.room.Room;
 import com.hotel.hotel.domain.room.RoomDetailsDTO;
 import com.hotel.hotel.domain.room.RoomEditDTO;
+import com.hotel.hotel.domain.room.RoomFilters;
 import com.hotel.hotel.domain.room.RoomSaveDTO;
 import com.hotel.hotel.services.RoomService;
 
@@ -40,8 +41,8 @@ public class RoomController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<RoomDetailsDTO>> list(Pageable pagination) {
-        var rooms = service.list(pagination).map(RoomDetailsDTO::new);
+    public ResponseEntity<Page<RoomDetailsDTO>> list(RoomFilters filters, Pageable pagination) {
+        var rooms = service.list(filters, pagination).map(RoomDetailsDTO::new);
         return ResponseEntity.ok(rooms);
     }
 

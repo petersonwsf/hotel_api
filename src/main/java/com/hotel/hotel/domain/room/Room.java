@@ -57,9 +57,10 @@ public class Room {
         if (data.customPrice() != null) {
             this.customPrice = data.customPrice();
         }
-        if (data.status() != null) {
-            this.status = data.status();
-        }
+    }
+
+    public void changeStatus(StatusRoom status) {
+        this.status = status;
     }
 
     public void assignRoomType(RoomType roomType) {

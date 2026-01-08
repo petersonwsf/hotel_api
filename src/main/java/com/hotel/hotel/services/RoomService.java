@@ -3,12 +3,15 @@ package com.hotel.hotel.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.domain.room.Room;
 import com.hotel.hotel.domain.room.RoomEditDTO;
+import com.hotel.hotel.domain.room.RoomFilters;
 import com.hotel.hotel.domain.room.RoomRepository;
 import com.hotel.hotel.domain.room.RoomSaveDTO;
+import com.hotel.hotel.domain.room.RoomSpecification;
 import com.hotel.hotel.domain.roomTypes.RoomTypeRepository;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
@@ -40,8 +43,18 @@ public class RoomService {
         return newRoom;
     }
 
-    public Page<Room> list(Pageable pagination) {
-        return repository.findAll(pagination);
+    public Page<Room> list(RoomFilters filters, Pageable pagination) {
+
+        Specification<Room> filter = (root, query, criteriaBuilder) -> null;
+
+        filter = filter.and(RoomSpecification.codeEqual(filters.code()))
+                .and(RoomSpecification.roomTypeIdEqual(filters.roomTypeId()))
+                .and(RoomSpecification.activeEqual(filters.active()))
+                .and(RoomSpecification.floorEqual(filters.floor()))
+                .and(RoomSpecification.statusEqual(filters.status()))
+                .and(RoomSpecification.priceBetween(filters.minPrice(), filters.maxPrice()));
+
+        return repository.findAll(filter, pagination);
     }
 
     public Room getDetails(Long id) {

@@ -19,6 +19,7 @@ import com.hotel.hotel.domain.dtos.MessageResponse;
 import com.hotel.hotel.domain.reservation.Reservation;
 import com.hotel.hotel.domain.reservation.ReservationDetailsDTO;
 import com.hotel.hotel.domain.reservation.ReservationEditDTO;
+import com.hotel.hotel.domain.reservation.ReservationFilters;
 import com.hotel.hotel.domain.reservation.ReservationSaveDTO;
 import com.hotel.hotel.services.ReservationService;
 
@@ -40,8 +41,8 @@ public class ReservationController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ReservationDetailsDTO>> list(Pageable pagination) {
-        var reservations = service.list(pagination).map(ReservationDetailsDTO::new);
+    public ResponseEntity<Page<ReservationDetailsDTO>> list(ReservationFilters filters, Pageable pagination) {
+        var reservations = service.list(filters, pagination).map(ReservationDetailsDTO::new);
         return ResponseEntity.ok(reservations);
     }
 
@@ -57,6 +58,13 @@ public class ReservationController {
     public ResponseEntity delete(@PathVariable Long id) {
        service.deleteById(id);
         return ResponseEntity.ok(new MessageResponse("Reservation cancelled succesfully"));
+    }
+
+    @PatchMapping("/confirm/{id}")
+    @Transactional
+    public ResponseEntity confirm(@PathVariable Long id) {
+        service.confirm(id);
+        return ResponseEntity.ok(new MessageResponse("Reservation confirmed succesfully"));
     }
 
     @GetMapping("/{id}")
