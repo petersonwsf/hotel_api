@@ -3,12 +3,15 @@ package com.hotel.hotel.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.domain.client.Client;
 import com.hotel.hotel.domain.client.ClientEditDTO;
+import com.hotel.hotel.domain.client.ClientFilter;
 import com.hotel.hotel.domain.client.ClientRepository;
 import com.hotel.hotel.domain.client.ClientSaveDTO;
+import com.hotel.hotel.domain.client.ClientSpecification;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 
@@ -40,8 +43,18 @@ public class ClientService {
         return newClient;
     }
 
-    public Page<Client> list(Pageable pagination) {
-        return repository.findAllByDeletedFalse(pagination);
+    public Page<Client> list(ClientFilter filter, Pageable pagination) {
+
+        Specification<Client> filters = (root, query, callBack) -> null;
+        
+        filters = filters
+            .and(ClientSpecification.nameLike(filter.name()))
+            .and(ClientSpecification.pinEqual(filter.pin()))
+            .and(ClientSpecification.emailEqual(filter.email()))
+            .and(ClientSpecification.phoneNumberEqual(filter.phoneNumber()))
+            .and(ClientSpecification.isDeleted(filter.deleted()));
+
+        return repository.findAll(filters, pagination);
     }
 
     public Client edit(ClientEditDTO data, Long id) {

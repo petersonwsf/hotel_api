@@ -6,12 +6,15 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.domain.reservation.Reservation;
 import com.hotel.hotel.domain.reservation.ReservationEditDTO;
+import com.hotel.hotel.domain.reservation.ReservationFilters;
 import com.hotel.hotel.domain.reservation.ReservationRepository;
 import com.hotel.hotel.domain.reservation.ReservationSaveDTO;
+import com.hotel.hotel.domain.reservation.ReservationSpecification;
 import com.hotel.hotel.domain.reservation.Status;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.infra.exceptions.RoomNotAvailable;
@@ -33,8 +36,10 @@ public class ReservationService {
         var room = roomService.getDetails(data.roomId());
 
         var reservationDateBetween = repository.findByCheckInDateBetween(data.checkInDate(), data.checkOutDate(), data.roomId());
-        if (!reservationDateBetween.isEmpty()) {
-            throw new RoomNotAvailable("Room is not available for the selected dates");
+        for (Reservation reservation : reservationDateBetween) {
+            if (reservation.getStatus() != Status.CANCELED) {
+                throw new RoomNotAvailable("Room is not available for the selected dates");
+            }
         }
 
         var days = data.checkOutDate().toEpochDay() - data.checkInDate().toEpochDay();
@@ -46,14 +51,23 @@ public class ReservationService {
         reservation.assignClient(client);
         reservation.assignRoom(room);
         reservation.setTotalAmount(totalAmount);
-
+    
         Reservation newReservation = repository.save(reservation);
 
         return newReservation;
     }
 
-    public Page<Reservation> list(Pageable pagination) {
-        return repository.findByStatusNot(pagination, Status.CANCELED);
+    public Page<Reservation> list(ReservationFilters filters, Pageable pagination) {
+
+        Specification<Reservation> filter = (root, query, criteriaBuilder) -> null;
+
+        filter = filter.and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
+                .and(ReservationSpecification.clientIdEqual(filters.client()))
+                .and(ReservationSpecification.roomIdEqual(filters.room()))
+                .and(ReservationSpecification.sourceEqual(filters.source()))
+                .and(ReservationSpecification.statusEqual(filters.status()));
+
+        return repository.findAll(filter, pagination);
     }
 
     public Reservation getById(Long id) {
@@ -97,5 +111,10 @@ public class ReservationService {
     public void deleteById(Long id) {
         var reservation = getById(id);
         reservation.changeStatus(Status.CANCELED);
+    }
+
+    public void confirm(Long id) {
+        var reservation = getById(id);
+        reservation.changeStatus(Status.CONFIRMED);
     }
 }

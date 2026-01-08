@@ -18,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.hotel.hotel.domain.client.Client;
 import com.hotel.hotel.domain.client.ClientDetailsDTO;
 import com.hotel.hotel.domain.client.ClientEditDTO;
+import com.hotel.hotel.domain.client.ClientFilter;
 import com.hotel.hotel.domain.client.ClientListDTO;
 import com.hotel.hotel.domain.client.ClientSaveDTO;
 import com.hotel.hotel.domain.dtos.MessageResponse;
@@ -41,8 +42,8 @@ public class ClientController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ClientListDTO>> list(Pageable pagination) {
-        var clients = service.list(pagination).map(ClientListDTO::new);
+    public ResponseEntity<Page<ClientListDTO>> list(ClientFilter filters, Pageable pagination) {
+        var clients = service.list(filters, pagination).map(ClientListDTO::new);
         return ResponseEntity.ok(clients);
     }
     

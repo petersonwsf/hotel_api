@@ -70,7 +70,7 @@ public class Reservation {
         this.dailyRate = data.dailyRate();
         this.discountAmount = data.discountAmount();
         this.serviceFee = data.serviceFee();
-        this.status = data.status();
+        this.status = Status.PENDING;
         this.source = data.source();
     }
 
