@@ -53,6 +53,13 @@ public class RoomController {
         return ResponseEntity.ok(new RoomDetailsDTO(room));
     }
 
+    @PatchMapping("/finishCleaning/{id}")
+    @Transactional
+    public ResponseEntity finishCleaning(@PathVariable Long id) {
+        service.finishCleaning(id);
+        return ResponseEntity.ok(new MessageResponse("Room cleaning finished succesfully"));
+    }
+
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity delete(@PathVariable Long id) {

@@ -56,7 +56,7 @@ public class ReservationController {
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
-       service.deleteById(id);
+       service.cancel(id);
         return ResponseEntity.ok(new MessageResponse("Reservation cancelled succesfully"));
     }
 
@@ -65,6 +65,20 @@ public class ReservationController {
     public ResponseEntity confirm(@PathVariable Long id) {
         service.confirm(id);
         return ResponseEntity.ok(new MessageResponse("Reservation confirmed succesfully"));
+    }
+
+    @PatchMapping("/checkIn/{id}")
+    @Transactional
+    public ResponseEntity checkIn(@PathVariable Long id) {
+        service.checkIn(id);
+        return ResponseEntity.ok(new MessageResponse("Check-In successful"));
+    }
+
+    @PatchMapping("/checkOut/{id}")
+    @Transactional
+    public ResponseEntity checkOut(@PathVariable Long id) {
+        service.checkOut(id);
+        return ResponseEntity.ok(new MessageResponse("Check-Out successful"));
     }
 
     @GetMapping("/{id}")
