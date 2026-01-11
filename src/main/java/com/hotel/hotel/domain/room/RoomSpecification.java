@@ -1,10 +1,33 @@
 package com.hotel.hotel.domain.room;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import com.hotel.hotel.domain.reservation.Reservation;
+import jakarta.persistence.criteria.Subquery;
+
 public class RoomSpecification {
+
+    public static Specification<Room> roomAvailableOn(LocalDate checkInDate, LocalDate checkOutDate) {
+         return (root, query, criteriaBuilder) -> {
+            if (checkInDate == null || checkOutDate == null) return null;
+
+            query.distinct(true);
+
+            Subquery<Long> subquery = query.subquery(Long.class);
+            var reservationRoot = subquery.from(Reservation.class);
+            subquery.select(reservationRoot.get("room").get("id"))
+            .where(
+                criteriaBuilder.equal(reservationRoot.get("room").get("id"), root.get("id")),
+                criteriaBuilder.lessThan(reservationRoot.get("checkInDate"), checkOutDate),
+                criteriaBuilder.greaterThan(reservationRoot.get("checkOutDate"), checkInDate)
+            );
+
+            return criteriaBuilder.not(criteriaBuilder.exists(subquery));
+        };
+    }
     
     public static Specification<Room> codeEqual(String code) {
         return (root, query, criteriaBuilder) -> {

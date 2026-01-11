@@ -48,6 +48,7 @@ public class RoomService {
         Specification<Room> filter = (root, query, criteriaBuilder) -> null;
 
         filter = filter.and(RoomSpecification.codeEqual(filters.code()))
+                .and(RoomSpecification.roomAvailableOn(filters.checkInDate(), filters.checkOutDate()))
                 .and(RoomSpecification.roomTypeIdEqual(filters.roomTypeId()))
                 .and(RoomSpecification.activeEqual(filters.active()))
                 .and(RoomSpecification.floorEqual(filters.floor()))
