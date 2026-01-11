@@ -12,6 +12,7 @@ import com.hotel.hotel.domain.room.RoomFilters;
 import com.hotel.hotel.domain.room.RoomRepository;
 import com.hotel.hotel.domain.room.RoomSaveDTO;
 import com.hotel.hotel.domain.room.RoomSpecification;
+import com.hotel.hotel.domain.room.StatusRoom;
 import com.hotel.hotel.domain.roomTypes.RoomTypeRepository;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
@@ -78,6 +79,11 @@ public class RoomService {
         room.edit(data);
 
         return room;
+    }
+
+    public void finishCleaning(Long id) {
+        var room = getDetails(id);
+        room.changeStatus(StatusRoom.AVAILABLE);
     }
 
     public void delete(Long id) {

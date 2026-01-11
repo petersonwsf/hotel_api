@@ -16,6 +16,7 @@ import com.hotel.hotel.domain.reservation.ReservationRepository;
 import com.hotel.hotel.domain.reservation.ReservationSaveDTO;
 import com.hotel.hotel.domain.reservation.ReservationSpecification;
 import com.hotel.hotel.domain.reservation.Status;
+import com.hotel.hotel.domain.room.StatusRoom;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.infra.exceptions.RoomNotAvailable;
 
@@ -108,7 +109,7 @@ public class ReservationService {
         return reservation;
     }
 
-    public void deleteById(Long id) {
+    public void cancel(Long id) {
         var reservation = getById(id);
         reservation.changeStatus(Status.CANCELED);
     }
@@ -117,4 +118,19 @@ public class ReservationService {
         var reservation = getById(id);
         reservation.changeStatus(Status.CONFIRMED);
     }
+
+    public void checkIn(Long id) {
+        var reservation = getById(id);
+        var room = reservation.getRoom();
+        room.changeStatus(StatusRoom.OCCUPIED);
+        reservation.changeStatus(Status.CHECKED_IN);
+    }
+
+    public void checkOut(Long id) {
+        var reservation = getById(id);
+        var room = reservation.getRoom();
+        room.changeStatus(StatusRoom.CLEANING);
+        reservation.changeStatus(Status.CHECKED_OUT);
+    }
+
 }
