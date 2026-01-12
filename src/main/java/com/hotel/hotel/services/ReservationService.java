@@ -133,4 +133,8 @@ public class ReservationService {
         reservation.changeStatus(Status.CHECKED_OUT);
     }
 
+    public Page<Reservation> listReservationsByClient(Long clientId, Pageable pagination) {
+        return repository.findByClientId(clientId, pagination);
+    }
+
 }

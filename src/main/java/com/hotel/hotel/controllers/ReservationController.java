@@ -86,4 +86,10 @@ public class ReservationController {
         var reservation = service.getById(id);
         return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
     }
+
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<Page<ReservationDetailsDTO>> listReservationsByClient(@PathVariable Long clientId, Pageable pagination) {
+        var reservations = service.listReservationsByClient(clientId, pagination).map(ReservationDetailsDTO::new);
+        return ResponseEntity.ok(reservations);
+    }
 }

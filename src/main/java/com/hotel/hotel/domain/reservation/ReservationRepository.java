@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
     Page<Reservation> findByStatusNot(Pageable pageable, Status status);
     List<Reservation> findByClientId(Long clientId);
+    Page<Reservation> findByClientId(Long clientId, Pageable pageable);
 
     @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.status <> 'CANCELLED' AND ((r.checkInDate >= :startDate AND r.checkInDate <= :endDate) OR (r.checkOutDate >= :startDate AND r.checkOutDate <= :endDate))")
     List<Reservation> findByCheckInDateBetween(
