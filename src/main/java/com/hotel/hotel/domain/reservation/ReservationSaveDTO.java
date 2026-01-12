@@ -20,8 +20,6 @@ public record ReservationSaveDTO(
     @NotNull
     BigDecimal serviceFee,
     @NotNull
-    Status status,
-    @NotNull
     Source source,
     @NotNull
     Long clientId,
