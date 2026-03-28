@@ -12,6 +12,9 @@ import com.hotel.hotel.domain.client.ClientFilter;
 import com.hotel.hotel.domain.client.ClientRepository;
 import com.hotel.hotel.domain.client.ClientSaveDTO;
 import com.hotel.hotel.domain.client.ClientSpecification;
+import com.hotel.hotel.domain.user.Role;
+import com.hotel.hotel.domain.user.User;
+import com.hotel.hotel.domain.user.UserRepository;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 
@@ -20,6 +23,9 @@ public class ClientService {
 
     @Autowired
     private ClientRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public Client create(ClientSaveDTO data) throws ResourceAlreadyExists {
 
@@ -35,8 +41,12 @@ public class ClientService {
         if (pinAlreadyExists.isPresent()) {
             throw new ResourceAlreadyExists("Pin already used");
         }
+
+        User newUser = new User(data.name(), data.email(), data.password(), Role.CLIENT);
+
+        User user = userRepository.save(newUser);
         
-        Client client = new Client(data);
+        Client client = new Client(data, user);
         
         Client newClient = repository.save(client);
 
@@ -88,4 +98,9 @@ public class ClientService {
         return client;
     }
     
+    public Client getClientByUserId(Long id) {
+        Client client = repository.findByUserId(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Client with user id " + id + " does not exists"));
+        return client;
+    }
 }

@@ -66,4 +66,10 @@ public class ClientController {
         Client client = service.getById(id);
         return ResponseEntity.ok(new ClientDetailsDTO(client));
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity getClientByUserId(@PathVariable Long id) {
+        Client client = service.getClientByUserId(id);
+        return ResponseEntity.ok(new ClientDetailsDTO(client));
+    }
 }

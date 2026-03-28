@@ -21,7 +21,10 @@ public record ClientSaveDTO(
     
     @NotBlank
     @Email
-    String email, 
+    String email,
+    
+    @NotBlank
+    String password,
     
     @NotNull
     @Past(message = "A data de nascimento deve estar no passado")
