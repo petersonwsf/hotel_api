@@ -1,0 +1,5 @@
+ALTER TABLE client 
+DROP CONSTRAINT IF EXISTS fk_client_user;
+
+ALTER TABLE client 
+DROP COLUMN IF EXISTS user_id;

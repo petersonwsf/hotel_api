@@ -6,13 +6,16 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hotel.hotel.domain.contactInformation.ContactInformation;
 import com.hotel.hotel.domain.reservation.Reservation;
+import com.hotel.hotel.domain.user.User;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,6 +36,10 @@ public class Client {
     private LocalDate dateOfBirth;
     private Boolean deleted;
 
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Embedded
     private ContactInformation contactInformation;
 
@@ -40,13 +47,14 @@ public class Client {
     @JsonIgnore
     private List<Reservation> reservations;
 
-    public Client(ClientSaveDTO data) {
+    public Client(ClientSaveDTO data, User user) {
         this.deleted = false;
         this.name = data.name();
         this.pin = data.pin();
         this.email = data.email();
         this.dateOfBirth = data.dateOfBirth();
         this.contactInformation = new ContactInformation(data.contactInformation());
+        this.user = user;
     }
 
     public void edit(ClientEditDTO data) {

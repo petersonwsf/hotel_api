@@ -48,6 +48,15 @@ public class User implements UserDetails{
         this.deleted = false;
     }
 
+    public User(String name, String login, String password, Role role) {
+        var bcrypt = new BCryptPasswordEncoder();
+        this.name = name;
+        this.login = login;
+        this.password = bcrypt.encode(password);
+        this.role = role;
+        this.deleted = false;
+    }
+
     public void edit(UserSaveDTO data) {
         var bcrypt = new BCryptPasswordEncoder();
         if (data.name() != null) {
