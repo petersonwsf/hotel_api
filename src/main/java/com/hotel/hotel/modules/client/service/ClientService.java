@@ -18,6 +18,9 @@ import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ClientService {
 
@@ -28,32 +31,39 @@ public class ClientService {
     private UserRepository userRepository;
 
     public Client create(ClientSaveDTO data) throws ResourceAlreadyExists {
-
+        log.info("Starting process to create client {}", data.name());
         var emailAlreadyExists = repository.findByEmail(data.email());
         if (emailAlreadyExists.isPresent()) {
+            log.warn("The email sent by {} already been used", data.name());
             throw new ResourceAlreadyExists("Email already used");
         }
+    
         var phoneAlreadyExists = repository.findByContactInformation_PhoneNumber(data.contactInformation().phoneNumber());
         if (phoneAlreadyExists.isPresent()) {
+            log.warn("The phone number sent by {} already been used", data.name());
             throw new ResourceAlreadyExists("Phone number already used");
         }
         var pinAlreadyExists = repository.findByPin(data.pin());
         if (pinAlreadyExists.isPresent()) {
+            log.warn("The pin sent by {} already been used", data.name());
             throw new ResourceAlreadyExists("Pin already used");
         }
 
         User newUser = new User(data.name(), data.email(), data.password(), Role.CLIENT);
 
         User user = userRepository.save(newUser);
+        log.info("The client user {} was successfully created", data.name());
         
         Client client = new Client(data, user);
         
         Client newClient = repository.save(client);
+        log.info("The client {} was successfully created", data.name());
 
         return newClient;
     }
 
     public Page<Client> list(ClientFilter filter, Pageable pagination) {
+        log.info("Starting process to list clients");
 
         Specification<Client> filters = (root, query, callBack) -> null;
         
@@ -64,25 +74,33 @@ public class ClientService {
             .and(ClientSpecification.phoneNumberEqual(filter.phoneNumber()))
             .and(ClientSpecification.isDeleted(filter.deleted()));
 
+        log.info("Returning the clients list");
         return repository.findAll(filters, pagination);
     }
 
     public Client edit(ClientEditDTO data, Long id) {
+        log.info("Starting process to edit client eith ID: {}", data.id());
         Client client = repository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         
         if (data.email() != null) {
             var emailAlreadyExists = repository.findByEmail(data.email());
-            if (emailAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Email already exists");
+            if (emailAlreadyExists.isPresent()) {
+                log.warn("Email sent by user with ID {} already been used", data.id());
+                throw new ResourceAlreadyExists("Email already exists");
+            };
         }
 
         if (data.contactInformation() != null && data.contactInformation().phoneNumber() != null) {
             var phoneAlreadyExists = repository.findByContactInformation_PhoneNumber(data.contactInformation().phoneNumber());
-            if (phoneAlreadyExists.isPresent()) throw new ResourceAlreadyExists("Phone number already exists");
+            if (phoneAlreadyExists.isPresent()) {
+                log.warn("Phone number sent by user with ID: {} already been used", data.id());
+                throw new ResourceAlreadyExists("Phone number already exists");
+            }
         }
 
         client.edit(data);
-
+        log.info("Client with ID: {} successfully edited");
         return client;
     }
 
