@@ -6,12 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.hotel.hotel.domain.user.User;
-import com.hotel.hotel.domain.user.UserRepository;
-import com.hotel.hotel.domain.userActions.Action;
-import com.hotel.hotel.domain.userActions.UserAction;
-import com.hotel.hotel.domain.userActions.UserActionRepository;
 import com.hotel.hotel.infra.security.TokenService;
+import com.hotel.hotel.modules.user.model.User;
+import com.hotel.hotel.modules.user.repository.UserRepository;
+import com.hotel.hotel.modules.userActions.model.Action;
+import com.hotel.hotel.modules.userActions.model.UserAction;
+import com.hotel.hotel.modules.userActions.repository.UserActionRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

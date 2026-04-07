@@ -1,0 +1,95 @@
+package com.hotel.hotel.modules.room.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
+import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
+import com.hotel.hotel.modules.room.dtos.RoomEditDTO;
+import com.hotel.hotel.modules.room.dtos.RoomFilters;
+import com.hotel.hotel.modules.room.dtos.RoomSaveDTO;
+import com.hotel.hotel.modules.room.model.Room;
+import com.hotel.hotel.modules.room.model.StatusRoom;
+import com.hotel.hotel.modules.room.repository.RoomRepository;
+import com.hotel.hotel.modules.room.repository.specs.RoomSpecification;
+import com.hotel.hotel.modules.roomTypes.repository.RoomTypeRepository;
+
+@Service
+public class RoomService {
+
+    @Autowired
+    private RoomRepository repository;
+
+    @Autowired
+    private RoomTypeRepository roomTypeRepository;
+    
+    public Room create(RoomSaveDTO data) {
+        
+        var roomCodeAlreadyExists = repository.findByCode(data.code());
+
+        if (roomCodeAlreadyExists.isPresent()) {
+            throw new ResourceAlreadyExists("Room code already exists");
+        }
+
+        var roomType = roomTypeRepository.findById(data.roomType())
+            .orElseThrow(() -> new ResourceNotFoundException("Room type not found"));
+        
+        var room = new Room(data, roomType);
+
+        var newRoom = repository.save(room);
+        
+        return newRoom;
+    }
+
+    public Page<Room> list(RoomFilters filters, Pageable pagination) {
+
+        Specification<Room> filter = (root, query, criteriaBuilder) -> null;
+
+        filter = filter.and(RoomSpecification.codeEqual(filters.code()))
+                .and(RoomSpecification.roomAvailableOn(filters.checkInDate(), filters.checkOutDate()))
+                .and(RoomSpecification.roomTypeIdEqual(filters.roomTypeId()))
+                .and(RoomSpecification.activeEqual(filters.active()))
+                .and(RoomSpecification.floorEqual(filters.floor()))
+                .and(RoomSpecification.statusEqual(filters.status()))
+                .and(RoomSpecification.priceBetween(filters.minPrice(), filters.maxPrice()));
+
+        return repository.findAll(filter, pagination);
+    }
+
+    public Room getDetails(Long id) {
+        var room = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
+        
+        return room;
+    }
+
+    public Room edit(RoomEditDTO data, Long id) {
+        var room = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
+
+        if (data.roomType() != null) {
+            var roomType = roomTypeRepository.findById(data.roomType())
+                .orElseThrow(() -> new ResourceNotFoundException("Room type not found"));
+            room.assignRoomType(roomType);
+        }
+
+        room.edit(data);
+
+        return room;
+    }
+
+    public void finishCleaning(Long id) {
+        var room = getDetails(id);
+        room.changeStatus(StatusRoom.AVAILABLE);
+    }
+
+    public void delete(Long id) {
+        var room = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
+        
+        repository.delete(room);
+    }
+}

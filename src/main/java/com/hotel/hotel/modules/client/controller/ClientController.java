@@ -1,0 +1,75 @@
+package com.hotel.hotel.modules.client.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.hotel.hotel.infra.dtos.MessageResponse;
+import com.hotel.hotel.modules.client.dtos.ClientDetailsDTO;
+import com.hotel.hotel.modules.client.dtos.ClientEditDTO;
+import com.hotel.hotel.modules.client.dtos.ClientFilter;
+import com.hotel.hotel.modules.client.dtos.ClientListDTO;
+import com.hotel.hotel.modules.client.dtos.ClientSaveDTO;
+import com.hotel.hotel.modules.client.model.Client;
+import com.hotel.hotel.modules.client.service.ClientService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/client")
+public class ClientController {
+
+    @Autowired
+    private ClientService service;
+
+    @PostMapping
+    @Transactional
+    public ResponseEntity create(@RequestBody @Valid ClientSaveDTO data, UriComponentsBuilder uriBuilder) {
+        Client client = service.create(data);
+        var uri = uriBuilder.path("/client/{id}").buildAndExpand(client.getId()).toUri();
+        return ResponseEntity.created(uri).body(new ClientDetailsDTO(client));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<ClientListDTO>> list(ClientFilter filters, Pageable pagination) {
+        var clients = service.list(filters, pagination).map(ClientListDTO::new);
+        return ResponseEntity.ok(clients);
+    }
+    
+    @PatchMapping("/{id}")
+    @Transactional
+    public ResponseEntity edit(@RequestBody @Valid ClientEditDTO data, @PathVariable Long id) {
+        Client client = service.edit(data, id);
+        return ResponseEntity.ok(new ClientDetailsDTO(client));
+    }
+
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity delete(@PathVariable Long id) {
+        service.deleteById(id);
+        return ResponseEntity.ok(new MessageResponse("Client deleted successfully"));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity getClientById(@PathVariable Long id) {
+        Client client = service.getById(id);
+        return ResponseEntity.ok(new ClientDetailsDTO(client));
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity getClientByUserId(@PathVariable Long id) {
+        Client client = service.getClientByUserId(id);
+        return ResponseEntity.ok(new ClientDetailsDTO(client));
+    }
+}
