@@ -88,7 +88,7 @@ public class ClientService {
             if (emailAlreadyExists.isPresent()) {
                 log.warn("Email sent by user with ID {} already been used", data.id());
                 throw new ResourceAlreadyExists("Email already exists");
-            };
+            }
         }
 
         if (data.contactInformation() != null && data.contactInformation().phoneNumber() != null) {
