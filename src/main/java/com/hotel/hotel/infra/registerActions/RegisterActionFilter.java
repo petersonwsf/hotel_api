@@ -17,7 +17,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class RegisterActionFilter extends OncePerRequestFilter{
 
@@ -39,6 +41,7 @@ public class RegisterActionFilter extends OncePerRequestFilter{
             if (token != null) {
                 var subject = tokenService.getSubject(token);
                 User user = userRepository.findByUsername(subject);
+                log.info("Register action: {} by user: {}", action.name(), user.getId());
                 var actionSaved = new UserAction(action, user);
                 actionRepository.save(actionSaved);
             }

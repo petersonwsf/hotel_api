@@ -38,52 +38,52 @@ public class ClientController {
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid ClientSaveDTO data, UriComponentsBuilder uriBuilder) {
-        log.debug("Received a request to create client named {}", data.name());
+        log.info("Received a request to create client named {}", data.name());
         Client client = service.create(data);
         var uri = uriBuilder.path("/client/{id}").buildAndExpand(client.getId()).toUri();
-        log.debug("Client {} was successfully created", data.name());
+        log.info("Client {} was successfully created", data.name());
         return ResponseEntity.created(uri).body(new ClientDetailsDTO(client));
     }
 
     @GetMapping
     public ResponseEntity<Page<ClientListDTO>> list(ClientFilter filters, Pageable pagination) {
-        log.debug("Received a request to list clients");
+        log.info("Received a request to list clients");
         var clients = service.list(filters, pagination).map(ClientListDTO::new);
-        log.debug("Responding a request to list clients");
+        log.info("Responding a request to list clients");
         return ResponseEntity.ok(clients);
     }
     
     @PatchMapping("/{id}")
     @Transactional
     public ResponseEntity edit(@RequestBody @Valid ClientEditDTO data, @PathVariable Long id) {
-        log.debug("Received a request to edit client with ID {}", id);
+        log.info("Received a request to edit client with ID {}", id);
         Client client = service.edit(data, id);
-        log.debug("Client with ID: {} was successfully edited", id);
+        log.info("Client with ID: {} was successfully edited", id);
         return ResponseEntity.ok(new ClientDetailsDTO(client));
     }
 
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
-        log.debug("Received a request to delete client with ID {}", id);
+        log.info("Received a request to delete client with ID {}", id);
         service.deleteById(id);
-        log.debug("Client with ID: {} was successfully deleted", id);
+        log.info("Client with ID: {} was successfully deleted", id);
         return ResponseEntity.ok(new MessageResponse("Client deleted successfully"));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity getClientById(@PathVariable Long id) {
-        log.debug("Received a request to retrieve client with ID {}", id);
+        log.info("Received a request to retrieve client with ID {}", id);
         Client client = service.getById(id);
-        log.debug("Client with ID: {} successfully retrieved", id);
+        log.info("Client with ID: {} successfully retrieved", id);
         return ResponseEntity.ok(new ClientDetailsDTO(client));
     }
 
     @GetMapping("/user/{id}")
     public ResponseEntity getClientByUserId(@PathVariable Long id) {
-        log.debug("Received a request to retrieve client with id user {}", id);
+        log.info("Received a request to retrieve client with id user {}", id);
         Client client = service.getClientByUserId(id);
-        log.debug("Client with id user: {} successfully retrieved", id);
+        log.info("Client with id user: {} successfully retrieved", id);
         return ResponseEntity.ok(new ClientDetailsDTO(client));
     }
 }

@@ -37,79 +37,79 @@ public class ReservationController {
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid ReservationSaveDTO data, UriComponentsBuilder uriBuilder) {
-        log.debug("Received a request to create a reservation for client ID: {} ", data.clientId());
+        log.info("Received a request to create a reservation for client ID: {} ", data.clientId());
         Reservation reservation = service.create(data);
         var uri = uriBuilder.path("/reservation/{id}").buildAndExpand(reservation.getId()).toUri();
-        log.debug("Reservation for client ID: {} was successfully created", data.clientId());
+        log.info("Reservation for client ID: {} was successfully created", data.clientId());
         return ResponseEntity.created(uri).body(new ReservationDetailsDTO(reservation));
     }
 
     @GetMapping
     public ResponseEntity<Page<ReservationDetailsDTO>> list(ReservationFilters filters, Pageable pagination) {
-        log.debug("Received a request to list reservations");
+        log.info("Received a request to list reservations");
         var reservations = service.list(filters, pagination).map(ReservationDetailsDTO::new);
-        log.debug("Responding request to list reservations");
+        log.info("Responding request to list reservations");
         return ResponseEntity.ok(reservations);
     }
 
     @PatchMapping("/{id}")
     @Transactional
     public ResponseEntity edit(@RequestBody @Valid ReservationEditDTO data, @PathVariable Long id) {
-        log.debug("Received a request to edit a reservation ID: {} ", id);
+        log.info("Received a request to edit a reservation ID: {} ", id);
         var reservation = service.edit(data, id);
-        log.debug("Reservation with ID: {} was successfully edited", id);
+        log.info("Reservation with ID: {} was successfully edited", id);
         return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
     }
 
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
-        log.debug("Received a request to delete a reservation ID: {} ", id);
+        log.info("Received a request to delete a reservation ID: {} ", id);
         service.cancel(id);
-        log.debug("Reservation with ID: {} was successfully deleted", id);
+        log.info("Reservation with ID: {} was successfully deleted", id);
         return ResponseEntity.ok(new MessageResponse("Reservation cancelled succesfully"));
     }
 
     @PatchMapping("/confirm/{id}")
     @Transactional
     public ResponseEntity confirm(@PathVariable Long id) {
-        log.debug("Received a request to confirm a reservation ID: {} ", id);
+        log.info("Received a request to confirm a reservation ID: {} ", id);
         service.confirm(id);
-        log.debug("Reservation with ID: {} was successfully confirmed", id);
+        log.info("Reservation with ID: {} was successfully confirmed", id);
         return ResponseEntity.ok(new MessageResponse("Reservation confirmed succesfully"));
     }
 
     @PatchMapping("/checkIn/{id}")
     @Transactional
     public ResponseEntity checkIn(@PathVariable Long id) {
-        log.debug("Received a request to check-in a reservation ID: {} ", id);
+        log.info("Received a request to check-in a reservation ID: {} ", id);
         service.checkIn(id);
-        log.debug("Reservation with ID: {} was successfully check-in", id);
+        log.info("Reservation with ID: {} was successfully check-in", id);
         return ResponseEntity.ok(new MessageResponse("Check-In successful"));
     }
 
     @PatchMapping("/checkOut/{id}")
     @Transactional
     public ResponseEntity checkOut(@PathVariable Long id) {
-        log.debug("Received a request to check-out a reservation ID: {} ", id);
+        log.info("Received a request to check-out a reservation ID: {} ", id);
         service.checkOut(id);
-        log.debug("Reservation with ID: {} was successfully check-out", id);
+        log.info("Reservation with ID: {} was successfully check-out", id);
         return ResponseEntity.ok(new MessageResponse("Check-Out successful"));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity getById(@PathVariable Long id) {
-        log.debug("Received a request to retrieve a reservation ID: {} ", id);
+        log.info("Received a request to retrieve a reservation ID: {} ", id);
         var reservation = service.getById(id);
-        log.debug("Reservation with ID: {} was successfully retrieved", id);
+        log.info("Reservation with ID: {} was successfully retrieved", id);
         return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
     }
 
     @GetMapping("/client/{clientId}")
     public ResponseEntity<Page<ReservationDetailsDTO>> listReservationsByClient(@PathVariable Long clientId, Pageable pagination) {
-        log.debug("Received a request to list reservation of client with ID: {} ", clientId);
+        log.info("Received a request to list reservation of client with ID: {} ", clientId);
         var reservations = service.listReservationsByClient(clientId, pagination).map(ReservationDetailsDTO::new);
-        log.debug("Responding a request to list reservations of client with ID: {}", clientId);
+        log.info("Responding a request to list reservations of client with ID: {}", clientId);
         return ResponseEntity.ok(reservations);
     }
 }

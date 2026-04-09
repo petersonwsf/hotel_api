@@ -17,6 +17,9 @@ import com.hotel.hotel.modules.room.repository.RoomRepository;
 import com.hotel.hotel.modules.room.repository.specs.RoomSpecification;
 import com.hotel.hotel.modules.roomTypes.repository.RoomTypeRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class RoomService {
 
@@ -27,7 +30,7 @@ public class RoomService {
     private RoomTypeRepository roomTypeRepository;
     
     public Room create(RoomSaveDTO data) {
-        
+        log.info("Starting process to create room");
         var roomCodeAlreadyExists = repository.findByCode(data.code());
 
         if (roomCodeAlreadyExists.isPresent()) {
@@ -40,12 +43,13 @@ public class RoomService {
         var room = new Room(data, roomType);
 
         var newRoom = repository.save(room);
+        log.info("Room successfully created in the database");
         
         return newRoom;
     }
 
     public Page<Room> list(RoomFilters filters, Pageable pagination) {
-
+        log.info("Starting listing rooms");
         Specification<Room> filter = (root, query, criteriaBuilder) -> null;
 
         filter = filter.and(RoomSpecification.codeEqual(filters.code()))
@@ -55,18 +59,20 @@ public class RoomService {
                 .and(RoomSpecification.floorEqual(filters.floor()))
                 .and(RoomSpecification.statusEqual(filters.status()))
                 .and(RoomSpecification.priceBetween(filters.minPrice(), filters.maxPrice()));
-
+        log.info("Returning rooms list");
         return repository.findAll(filter, pagination);
     }
 
     public Room getDetails(Long id) {
+        log.info("Starting process to retrieve details of the room with ID: {}", id);
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
-        
+        log.info("Returning details of the room with ID: {}", id);
         return room;
     }
 
     public Room edit(RoomEditDTO data, Long id) {
+        log.info("Starting process to edit room with ID: {}", id);
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 
@@ -77,19 +83,22 @@ public class RoomService {
         }
 
         room.edit(data);
-
+        log.info("Room with ID: {} successfully edited", id);
         return room;
     }
 
     public void finishCleaning(Long id) {
+        log.info("Starting process to clean room with ID: {}", id);
         var room = getDetails(id);
         room.changeStatus(StatusRoom.AVAILABLE);
+        log.info("Room with ID: {} successfully cleaned", id);
     }
 
     public void delete(Long id) {
+        log.info("Starting process to delete room with ID: {}", id);
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
-        
         repository.delete(room);
+        log.info("Room with ID: {} successfully deleted", id);
     }
 }
