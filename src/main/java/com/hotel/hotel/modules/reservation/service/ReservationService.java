@@ -22,6 +22,9 @@ import com.hotel.hotel.modules.reservation.repository.specs.ReservationSpecifica
 import com.hotel.hotel.modules.room.model.StatusRoom;
 import com.hotel.hotel.modules.room.service.RoomService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class ReservationService {
     
@@ -35,6 +38,7 @@ public class ReservationService {
     private ReservationRepository repository;
 
     public Reservation create(ReservationSaveDTO data) {
+        log.info("Starting process to create reservation for client with ID: {}", data.clientId());
         var client = clientService.getById(data.clientId());
         var room = roomService.getDetails(data.roomId());
 
@@ -56,11 +60,13 @@ public class ReservationService {
         reservation.setTotalAmount(totalAmount);
     
         Reservation newReservation = repository.save(reservation);
+        log.info("The reservation was successfully created in the database");
 
         return newReservation;
     }
 
     public Page<Reservation> list(ReservationFilters filters, Pageable pagination) {
+        log.info("Starting process to list reservations");
 
         Specification<Reservation> filter = (root, query, criteriaBuilder) -> null;
 
@@ -70,20 +76,24 @@ public class ReservationService {
                 .and(ReservationSpecification.sourceEqual(filters.source()))
                 .and(ReservationSpecification.statusEqual(filters.status()));
 
+        log.info("Returning the reservations list");
         return repository.findAll(filter, pagination);
     }
 
     public Reservation getById(Long id) {
+        log.info("Finding reservation with ID: {}", id);
         var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         return reservation;
     }
 
     public Reservation edit(ReservationEditDTO data, Long id) {
-
+        log.info("Starting process to edit reservation with ID: {}", id);
         var reservation = getById(id);
 
+
         if (data.checkInDate() != null && data.checkOutDate() != null && data.roomId() != null) {
+            log.debug("Check that the shipping date does not conflict");
             List<Reservation> reservationDateBetween = repository.findByCheckInDateBetween(data.checkInDate(), data.checkOutDate(), data.roomId());
             if (!reservationDateBetween.isEmpty()) {
                 throw new RoomNotAvailable("Room is not available for the selected dates");
@@ -91,6 +101,7 @@ public class ReservationService {
             var newRoom = roomService.getDetails(data.roomId());
             reservation.assignRoom(newRoom);
         } else if (data.checkInDate() != null && data.checkOutDate() != null) {
+            log.debug("Check that the shipping date does not conflict");
             List<Reservation> reservationDateBetween = repository.findByCheckInDateBetween(data.checkInDate(), data.checkOutDate(), reservation.getRoom().getId());
             if (!reservationDateBetween.isEmpty()) {
                 for (Reservation r : reservationDateBetween) {
@@ -103,25 +114,30 @@ public class ReservationService {
 
         reservation.edit(data);
 
+        log.info("Recalculating values");
         var days = reservation.getCheckOutDate().toEpochDay() - reservation.getCheckInDate().toEpochDay();
         var totalAmount = reservation.getDailyRate().multiply(BigDecimal.valueOf(days)).add(reservation.getServiceFee()).subtract(reservation.getDiscountAmount());
 
         reservation.setTotalAmount(totalAmount);
+        log.info("Reservation with ID: {} was successfully edited", id);
 
         return reservation;
     }
 
     public void cancel(Long id) {
+        log.info("Canceling reservation with ID: {}" , id);
         var reservation = getById(id);
         reservation.changeStatus(Status.CANCELED);
     }
 
     public void confirm(Long id) {
+        log.info("Confirming reservation with ID: {}" , id);
         var reservation = getById(id);
         reservation.changeStatus(Status.CONFIRMED);
     }
 
     public void checkIn(Long id) {
+        log.info("Checking in to the reservation with ID: {}", id);
         var reservation = getById(id);
         var room = reservation.getRoom();
         room.changeStatus(StatusRoom.OCCUPIED);
@@ -129,6 +145,7 @@ public class ReservationService {
     }
 
     public void checkOut(Long id) {
+        log.info("Checking out to the reservation with ID: {}", id);
         var reservation = getById(id);
         var room = reservation.getRoom();
         room.changeStatus(StatusRoom.CLEANING);
@@ -136,6 +153,7 @@ public class ReservationService {
     }
 
     public Page<Reservation> listReservationsByClient(Long clientId, Pageable pagination) {
+        log.info("Listing reservations of the client with ID: {}", clientId);
         return repository.findByClientId(clientId, pagination);
     }
 

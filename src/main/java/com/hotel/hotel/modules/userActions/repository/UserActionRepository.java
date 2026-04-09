@@ -5,6 +5,4 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.hotel.hotel.modules.userActions.model.UserAction;
 
-public interface UserActionRepository extends JpaRepository<UserAction, Long>, JpaSpecificationExecutor<UserAction>{
-    
-}
+public interface UserActionRepository extends JpaRepository<UserAction, Long>, JpaSpecificationExecutor<UserAction>{}
