@@ -23,6 +23,7 @@ import com.hotel.hotel.modules.room.model.StatusRoom;
 import com.hotel.hotel.modules.room.service.RoomService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -124,16 +125,20 @@ public class ReservationService {
         return reservation;
     }
 
+    @Transactional
     public void cancel(Long id) {
         log.info("Canceling reservation with ID: {}" , id);
         var reservation = getById(id);
         reservation.changeStatus(Status.CANCELED);
+        log.info("Reservation with ID: {} successfully canceled" , id);
     }
 
+    @Transactional
     public void confirm(Long id) {
         log.info("Confirming reservation with ID: {}" , id);
         var reservation = getById(id);
         reservation.changeStatus(Status.CONFIRMED);
+        log.info("Reservation with ID: {} successfully confirmed" , id);
     }
 
     public void checkIn(Long id) {
