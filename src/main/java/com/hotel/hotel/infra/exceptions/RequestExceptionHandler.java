@@ -1,6 +1,8 @@
 package com.hotel.hotel.infra.exceptions;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,6 +12,13 @@ import jakarta.persistence.EntityNotFoundException;
 
 @RestControllerAdvice
 public class RequestExceptionHandler {
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)  // 401
+                .body(new ErrorResponse("Invalid credentials"));
+    }
     
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity notFound() {
@@ -43,8 +52,8 @@ public class RequestExceptionHandler {
         }
     }
 
-    private record Error(String message) {
-        public Error(String message) {
+    private record ErrorResponse(String message) {
+        public ErrorResponse(String message) {
             this.message = message;
         }
     }

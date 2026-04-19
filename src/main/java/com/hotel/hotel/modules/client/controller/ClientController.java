@@ -1,9 +1,12 @@
 package com.hotel.hotel.modules.client.controller;
 
+import com.hotel.hotel.infra.security.TokenService;
+import com.hotel.hotel.modules.user.dtos.UserJsonDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +38,9 @@ public class ClientController {
     @Autowired
     private ClientService service;
 
+    @Autowired
+    private TokenService tokenService;
+
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid ClientSaveDTO data, UriComponentsBuilder uriBuilder) {
@@ -42,7 +48,8 @@ public class ClientController {
         Client client = service.create(data);
         var uri = uriBuilder.path("/client/{id}").buildAndExpand(client.getId()).toUri();
         log.info("Client {} was successfully created", data.name());
-        return ResponseEntity.created(uri).body(new ClientDetailsDTO(client));
+        var token = tokenService.createToken(client.getUser());
+        return ResponseEntity.created(uri).body(new UserJsonDTO(token));
     }
 
     @GetMapping
