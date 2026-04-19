@@ -61,6 +61,15 @@ public class RoomController {
         return ResponseEntity.ok(new RoomDetailsDTO(room));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity getDetails(@PathVariable Long id) {
+        log.info("Received request to retrieve rooms details with ID: {}", id);
+        var room = service.getDetails(id);
+        log.info("Room with ID: {} successfully retrieved");
+        return ResponseEntity.ok(new RoomDetailsDTO(room));
+    }
+
+
     @PatchMapping("/finishCleaning/{id}")
     @Transactional
     public ResponseEntity finishCleaning(@PathVariable Long id) {
