@@ -70,7 +70,7 @@ public class FileService {
     public void deleteById(Long id) {
         log.info("Start process to delete file with id: {}", id);
         File file = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("File does not exists"));
-        repository.deleteById(id);
+        repository.delete(file);
         log.info("File with ID: {} successfully deleted", id);
     }
 
