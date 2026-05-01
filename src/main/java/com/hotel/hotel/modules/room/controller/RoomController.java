@@ -3,16 +3,11 @@ package com.hotel.hotel.modules.room.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hotel.hotel.infra.dtos.MessageResponse;
@@ -26,6 +21,8 @@ import com.hotel.hotel.modules.room.service.RoomService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/room")
@@ -34,11 +31,11 @@ public class RoomController {
     @Autowired
     private RoomService service;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Transactional
-    public ResponseEntity create(@RequestBody @Valid RoomSaveDTO data, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity create(@RequestPart("room_data") @Valid RoomSaveDTO data, @RequestPart("images") List<MultipartFile> files, UriComponentsBuilder uriBuilder) {
         log.info("Received a request to create a room");
-        Room room = service.create(data);
+        Room room = service.create(data, files);
         var uri = uriBuilder.path("/room/{id}").buildAndExpand(room.getId()).toUri();
         log.info("Room was successfully created");
         return ResponseEntity.created(uri).body(new RoomDetailsDTO(room));
