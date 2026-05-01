@@ -1,5 +1,6 @@
 package com.hotel.hotel.modules.room.service;
 
+import com.hotel.hotel.modules.files.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,10 @@ import com.hotel.hotel.modules.room.repository.specs.RoomSpecification;
 import com.hotel.hotel.modules.roomTypes.repository.RoomTypeRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -25,11 +30,12 @@ public class RoomService {
 
     @Autowired
     private RoomRepository repository;
-
     @Autowired
     private RoomTypeRepository roomTypeRepository;
+    @Autowired
+    private FileService fileService;
     
-    public Room create(RoomSaveDTO data) {
+    public Room create(RoomSaveDTO data, List<MultipartFile> files) {
         log.info("Starting process to create room");
         var roomCodeAlreadyExists = repository.findByCode(data.code());
 
@@ -44,7 +50,12 @@ public class RoomService {
 
         var newRoom = repository.save(room);
         log.info("Room successfully created in the database");
-        
+
+        for (MultipartFile file : files) {
+            String minioKey = UUID.randomUUID().toString();
+            fileService.uploadFile(file, minioKey, newRoom, null);
+        }
+
         return newRoom;
     }
 

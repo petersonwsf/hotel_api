@@ -46,6 +46,11 @@ public class RequestExceptionHandler {
         return ResponseEntity.status(404).body(new Error(error.getMessage()));
     }
 
+    @ExceptionHandler(MyCustomStorageException.class)
+    public ResponseEntity minioError(MyCustomStorageException error) {
+        return ResponseEntity.status(500).body(new Error(error.getMessage()));
+    }
+
     private record ErrorData(String field, String error) {
         public ErrorData(FieldError error) {
             this(error.getField(), error.getDefaultMessage());
