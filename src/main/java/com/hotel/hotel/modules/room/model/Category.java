@@ -1,4 +1,4 @@
-package com.hotel.hotel.modules.roomTypes.model;
+package com.hotel.hotel.modules.room.model;
 
 public enum Category {
     STD,

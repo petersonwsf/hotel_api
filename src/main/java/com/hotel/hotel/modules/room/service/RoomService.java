@@ -16,7 +16,6 @@ import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 import com.hotel.hotel.modules.room.repository.RoomRepository;
 import com.hotel.hotel.modules.room.repository.specs.RoomSpecification;
-import com.hotel.hotel.modules.roomTypes.repository.RoomTypeRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,8 +30,6 @@ public class RoomService {
     @Autowired
     private RoomRepository repository;
     @Autowired
-    private RoomTypeRepository roomTypeRepository;
-    @Autowired
     private FileService fileService;
     
     public Room create(RoomSaveDTO data, List<MultipartFile> files) {
@@ -43,10 +40,7 @@ public class RoomService {
             throw new ResourceAlreadyExists("Room code already exists");
         }
 
-        var roomType = roomTypeRepository.findById(data.roomType())
-            .orElseThrow(() -> new ResourceNotFoundException("Room type not found"));
-        
-        var room = new Room(data, roomType);
+        var room = new Room(data);
 
         var newRoom = repository.save(room);
         log.info("Room successfully created in the database");
@@ -65,11 +59,12 @@ public class RoomService {
 
         filter = filter.and(RoomSpecification.codeEqual(filters.code()))
                 .and(RoomSpecification.roomAvailableOn(filters.checkInDate(), filters.checkOutDate()))
-                .and(RoomSpecification.roomTypeIdEqual(filters.roomTypeId()))
                 .and(RoomSpecification.activeEqual(filters.active()))
                 .and(RoomSpecification.floorEqual(filters.floor()))
                 .and(RoomSpecification.statusEqual(filters.status()))
-                .and(RoomSpecification.priceBetween(filters.minPrice(), filters.maxPrice()));
+                .and(RoomSpecification.priceBetween(filters.minPrice(), filters.maxPrice()))
+                .and(RoomSpecification.capacityGreaterThan(filters.capacity()))
+                .and(RoomSpecification.categoryEquals(filters.category()));
         log.info("Returning rooms list");
         return repository.findAll(filter, pagination);
     }
@@ -86,12 +81,6 @@ public class RoomService {
         log.info("Starting process to edit room with ID: {}", id);
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
-
-        if (data.roomType() != null) {
-            var roomType = roomTypeRepository.findById(data.roomType())
-                .orElseThrow(() -> new ResourceNotFoundException("Room type not found"));
-            room.assignRoomType(roomType);
-        }
 
         room.edit(data);
         log.info("Room with ID: {} successfully edited", id);

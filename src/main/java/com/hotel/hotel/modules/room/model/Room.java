@@ -4,18 +4,14 @@ import java.math.BigDecimal;
 
 import com.hotel.hotel.modules.room.dtos.RoomEditDTO;
 import com.hotel.hotel.modules.room.dtos.RoomSaveDTO;
-import com.hotel.hotel.modules.roomTypes.model.RoomType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,10 +31,12 @@ public class Room {
     private String code;
     private String floor;
     private BigDecimal customPrice;
+    private String bedConfig;
+    private String amenities;
+    private Integer capacity;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_type_id", nullable = false)
-    private RoomType roomType;
+    @Enumerated(EnumType.STRING)
+    private Category category;
 
     @Column(nullable = false)
     private Boolean active;
@@ -46,12 +44,15 @@ public class Room {
     @Enumerated(EnumType.STRING)
     private StatusRoom status;
 
-    public Room(RoomSaveDTO data, RoomType roomType) {
+    public Room(RoomSaveDTO data) {
         this.code = data.code();
         this.floor = data.floor();
         this.customPrice = data.customPrice();
         this.status = data.status();
-        this.roomType = roomType;
+        this.bedConfig = data.bedconfig();
+        this.amenities = data.amenities();
+        this.capacity = data.capacity();
+        this.category = data.category();
         this.active = true;
     }
 
@@ -59,13 +60,25 @@ public class Room {
         if (data.customPrice() != null) {
             this.customPrice = data.customPrice();
         }
+        if (data.bedconfig() != null) {
+            this.bedConfig = data.bedconfig();
+        }
+        if (data.amenities() != null) {
+            this.amenities = data.amenities();
+        }
+        if (data.capacity() != null) {
+            this.capacity = data.capacity();
+        }
+        if (data.category() != null) {
+            this.category = data.category();
+        }
     }
 
     public void changeStatus(StatusRoom status) {
         this.status = status;
     }
 
-    public void assignRoomType(RoomType roomType) {
-        this.roomType = roomType;
+    public void changeActive() {
+        this.active = !this.active;
     }
 }
