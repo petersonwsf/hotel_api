@@ -3,6 +3,7 @@ package com.hotel.hotel.modules.room.dtos;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.hotel.hotel.modules.room.model.Category;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 
 public record RoomFilters(
@@ -10,9 +11,10 @@ public record RoomFilters(
     LocalDate checkOutDate,
     String code,
     String floor,
-    Long roomTypeId,
     BigDecimal minPrice,
     BigDecimal maxPrice,
     StatusRoom status,
-    Boolean active
+    Boolean active,
+    Integer capacity,
+    Category category
 ) {}

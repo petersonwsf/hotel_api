@@ -3,6 +3,7 @@ package com.hotel.hotel.modules.room.repository.specs;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.hotel.hotel.modules.room.model.Category;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.hotel.hotel.modules.reservation.model.Reservation;
@@ -46,13 +47,6 @@ public class RoomSpecification {
         };
     }
 
-    public static Specification<Room> roomTypeIdEqual(Long roomTypeId) {
-        return (root, query, criteriaBuilder) -> {
-            if (roomTypeId == null) return null;
-            return criteriaBuilder.equal(root.get("roomType").get("id"), roomTypeId);
-        };
-    }
-
     public static Specification<Room> statusEqual(StatusRoom status) {
         return (root, query, criteriaBuilder) -> {
             if (status == null) return null;
@@ -77,6 +71,21 @@ public class RoomSpecification {
             } else {
                 return criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice);
             }
+        };
+    }
+
+
+    public static Specification<Room> capacityGreaterThan(Integer capacity) {
+        return (root, query, criteriaBuilder) -> {
+            if (capacity == null) return null;
+            return criteriaBuilder.greaterThanOrEqualTo(root.get("capacity"), capacity);
+        };
+    }
+
+    public static Specification<Room> categoryEquals(Category category) {
+        return (root, query, criteriaBuilder) -> {
+            if (category == null) return null;
+            return criteriaBuilder.equal(root.get("category"), category);
         };
     }
 }

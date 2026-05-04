@@ -2,12 +2,10 @@ package com.hotel.hotel.modules.room.dtos;
 
 import java.math.BigDecimal;
 
+import com.hotel.hotel.modules.room.model.Category;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 
 public record RoomSaveDTO(
 
@@ -25,7 +23,17 @@ public record RoomSaveDTO(
     @DecimalMin("100.00")
     BigDecimal customPrice,
 
+    @NotBlank
+    String bedconfig,
+
+    @NotBlank
+    String amenities,
+
     @NotNull
-    Long roomType
-    ) {
-}
+    @Min(value = 1)
+    Integer capacity,
+
+    @NotNull
+    Category category
+
+) {}
