@@ -30,19 +30,32 @@ public class SecurityConfigurations {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(HttpMethod.POST, "/login", "/register", "/client").permitAll()
-                    .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                        //ROTAS PÚBLICAS
+                        .requestMatchers(HttpMethod.POST, "/client").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/room", "/room/{id}").permitAll()
+                        .requestMatchers("/file/room/{id}", "/file/{id}").permitAll()
+                        // ROTAS PRIVADAS
+                        .requestMatchers(HttpMethod.GET, "/client").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/room").hasAuthority( "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/room/{id}").hasAuthority( "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/room/{id}").hasAuthority( "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/room/finishCleaning/{id}").hasAnyAuthority( "ROLE_ATTENDANT","ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/reservation/checkIn/{id}", "/reservation/checkOut/{id}").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/reservation").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/file/{id}").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/register").hasAuthority("ROLE_ADMIN")
+                        .anyRequest().permitAll()
                 ).exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setStatus(401);
                             response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-
-                            String message = request.getRequestURI().contains("/login")
-                                    ? "Login ou senha inválidos"
-                                    : "Não autenticado";
-
-                            response.getWriter().write("{\"message\": \"" + message + "\"}");
+                            response.getWriter().write("{\"message\": \"Usuário não autenticado.\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"message\": \"Permissão negada\"}");
                         })
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
