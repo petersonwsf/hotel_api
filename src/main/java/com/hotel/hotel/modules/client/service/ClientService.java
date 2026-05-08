@@ -49,7 +49,7 @@ public class ClientService {
             throw new ResourceAlreadyExists("Pin already used");
         }
 
-        User newUser = new User(data.name(), data.email(), data.password(), Role.CLIENT);
+        User newUser = new User(data.name(), data.email(), data.password(), data.contactInformation().phoneNumber(), Role.CLIENT);
 
         User user = userRepository.save(newUser);
         log.info("The client user {} was successfully created", data.name());
