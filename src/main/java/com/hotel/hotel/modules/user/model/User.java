@@ -3,6 +3,7 @@ package com.hotel.hotel.modules.user.model;
 import java.util.Collection;
 import java.util.List;
 
+import com.hotel.hotel.modules.user.dtos.UserEditDTO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -35,6 +36,8 @@ public class User implements UserDetails{
     private String name;
     private String login;
     private String password;
+    @Column(name = "phone_number")
+    private String phoneNumber;
     private Boolean deleted;
 
     @Enumerated(EnumType.STRING)
@@ -46,25 +49,36 @@ public class User implements UserDetails{
         this.name = data.name();
         this.login = data.login();
         this.password = bcrypt.encode(data.password());
+        this.phoneNumber = data.phoneNumber();
         this.role = data.role();
         this.deleted = false;
     }
 
-    public User(String name, String login, String password, Role role) {
+    public User(String name, String login, String password, String phoneNumber, Role role) {
         var bcrypt = new BCryptPasswordEncoder();
         this.name = name;
         this.login = login;
         this.password = bcrypt.encode(password);
+        this.phoneNumber = phoneNumber;
         this.role = role;
         this.deleted = false;
     }
 
-    public void edit(UserSaveDTO data) {
+    public void edit(UserEditDTO data) {
         var bcrypt = new BCryptPasswordEncoder();
         if (data.name() != null) {
             this.name = data.name();
+        }
+        if (data.login() != null) {
             this.login = data.login();
+        }
+        if (data.password() != null) {
             this.password = bcrypt.encode(data.password());
+        }
+        if (data.phoneNumber() != null) {
+            this.phoneNumber = data.phoneNumber();
+        }
+        if (data.role() != null) {
             this.role = data.role();
         }
     }
@@ -76,6 +90,11 @@ public class User implements UserDetails{
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_"+role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
     }
 
     @Override
