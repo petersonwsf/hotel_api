@@ -15,13 +15,21 @@ import com.hotel.hotel.modules.reservation.model.Status;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
     Page<Reservation> findByStatusNot(Pageable pageable, Status status);
-    List<Reservation> findByClientId(Long clientId);
-    Page<Reservation> findByClientId(Long clientId, Pageable pageable);
+    List<Reservation> findByUserId(Long clientId);
+    Page<Reservation> findByUserId(Long clientId, Pageable pageable);
 
-    @Query("SELECT r FROM Reservation r WHERE r.room.id = :roomId AND r.status <> 'CANCELLED' AND ((r.checkInDate >= :startDate AND r.checkInDate <= :endDate) OR (r.checkOutDate >= :startDate AND r.checkOutDate <= :endDate))")
-    List<Reservation> findByCheckInDateBetween(
-        @Param("startDate") LocalDate startDate, 
-        @Param("endDate") LocalDate endDate, 
-        @Param("roomId") Long roomId);
+
+    @Query("SELECT COUNT(r) > 0 FROM Reservation r " +
+            "WHERE r.room.id = :roomId " +
+            "AND r.status <> 'CANCELLED' " +
+            "AND r.checkInDate < :endDate " +
+            "AND r.checkOutDate > :startDate " +
+            "AND (:id IS NULL OR r.id <> :id)")
+    boolean existsOverlappingById(
+            @Param("roomId") Long roomId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("id") Long id
+    );
     
 }

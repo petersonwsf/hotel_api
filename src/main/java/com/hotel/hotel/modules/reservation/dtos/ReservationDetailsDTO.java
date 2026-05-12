@@ -8,6 +8,8 @@ import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.reservation.model.Source;
 import com.hotel.hotel.modules.reservation.model.Status;
 import com.hotel.hotel.modules.room.dtos.RoomDetailsDTO;
+import com.hotel.hotel.modules.user.dtos.UserResponseDTO;
+import com.hotel.hotel.modules.user.model.User;
 
 public record ReservationDetailsDTO(
     Long id,
@@ -20,7 +22,7 @@ public record ReservationDetailsDTO(
     Status status,
     Source source,
     RoomDetailsDTO room,
-    ClientDetailsDTO client
+    UserResponseDTO user
 ) {
     public ReservationDetailsDTO(Reservation reservation) {
         this(
@@ -34,7 +36,7 @@ public record ReservationDetailsDTO(
             reservation.getStatus(),
             reservation.getSource(),
             new RoomDetailsDTO(reservation.getRoom()),
-            new ClientDetailsDTO(reservation.getClient())
+            new UserResponseDTO(reservation.getUser())
         );
     }
 }

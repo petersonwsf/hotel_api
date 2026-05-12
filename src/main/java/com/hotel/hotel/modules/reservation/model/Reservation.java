@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.hotel.hotel.modules.client.model.Client;
 import com.hotel.hotel.modules.reservation.dtos.ReservationEditDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationSaveDTO;
 import com.hotel.hotel.modules.room.model.Room;
 
+import com.hotel.hotel.modules.user.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -59,8 +59,8 @@ public class Reservation {
     private LocalDateTime updatedAt;
 
     @ManyToOne
-    @JoinColumn(name = "client_id", nullable = false)
-    private Client client;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
     @ManyToOne
     @JoinColumn(name = "room_id", nullable = false)
@@ -94,8 +94,8 @@ public class Reservation {
         }
     }
 
-    public void assignClient(Client client) {
-        this.client = client;
+    public void assignClient(User user) {
+        this.user = user;
     }
 
     public void assignRoom(Room room) {

@@ -10,6 +10,6 @@ public record ReservationFilters(
     LocalDate checkOutDate, 
     Status status, 
     Source source, 
-    Long client, 
+    Long user,
     Long room
 ) {}

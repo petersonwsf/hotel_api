@@ -10,6 +10,8 @@ services:
       - POSTGRESQL_DATABASE=reservaHotel
     volumes:
       - postgres_data:/bitnami/postgresql
+    networks:
+      - hotel-net
   minio:
     container_name: hotel_files_minio
     hostname: minio
@@ -25,9 +27,21 @@ services:
       - hotel_files_minio_volume:/data
     networks:
       - hotel_files_minio_stack
+  adminer:
+    image: adminer:latest
+    container_name: hotel_adminer
+    ports:
+      - "6767:8080"
+    depends_on:
+      - postgresql
+    networks:
+      - hotel-net
+
 
 networks:
   hotel_files_minio_stack:
+  hotel-net:
+    driver: bridge
 
 volumes:
   postgres_data:

@@ -45,10 +45,6 @@ public class Client {
     @Embedded
     private ContactInformation contactInformation;
 
-    @OneToMany(mappedBy = "client")
-    @JsonIgnore
-    private List<Reservation> reservations;
-
     public Client(ClientSaveDTO data, User user) {
         this.deleted = false;
         this.name = data.name();

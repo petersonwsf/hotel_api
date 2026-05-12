@@ -1,5 +1,6 @@
 package com.hotel.hotel.modules.user.service;
 
+import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.infra.security.TokenService;
@@ -7,6 +8,7 @@ import com.hotel.hotel.modules.user.dtos.UserEditDTO;
 import com.hotel.hotel.modules.user.dtos.UserFilters;
 import com.hotel.hotel.modules.user.dtos.UserLoginDTO;
 import com.hotel.hotel.modules.user.dtos.UserSaveDTO;
+import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.repository.UserRepository;
 import com.hotel.hotel.modules.user.repository.specs.UserSpecification;
@@ -17,7 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -35,6 +37,8 @@ public class UserService {
 
     public String register(UserSaveDTO userData) {
         User user = new User(userData);
+        verifyLoginExists(userData.login(), null);
+        verifyPhoneNumberExists(userData.phoneNumber(), null);
         repository.save(user);
         log.info("User {} successfully created", userData.login());
         return tokenService.createToken(user);
@@ -53,6 +57,7 @@ public class UserService {
     }
 
     public Page<User> list(Pageable pagination, UserFilters filters) {
+        log.info("Listando usuários da página {} com tamanho {}", pagination.getPageNumber(), pagination.getPageSize());
         Specification<User> specification = (root, query, criteriaBuilder) -> null;
 
         specification = specification
@@ -61,23 +66,51 @@ public class UserService {
                 .and(UserSpecification.filterByRole(filters.role()))
                 .and(UserSpecification.filterByLogin(filters.login()));
 
+        log.info("Retornando usuáriosda página {} com tamanho {}", pagination.getPageNumber(), pagination.getPageSize());
         return repository.findAll(specification, pagination);
     }
 
     public void delete(Long id) {
+        log.info("Deletando usuário com Id: {}", id);
         User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        resourceBelongsUser(user);
         user.delete();
+        log.info("Usuário com ID: {} deletado com sucesso", id);
     }
 
     public User edit(UserEditDTO userData, long id) {
+        log.info("Editando usuário com ID: {}", id);
         User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
-        if (userData.login() != null) {
-            UserDetails loginAlreadyUsed = repository.findByLogin(userData.login());
-            if (loginAlreadyUsed != null) {
-                throw new ResourceAlreadyExists("Login já está em uso no momento");
-            }
-        }
+        resourceBelongsUser(user);
+        verifyLoginExists(userData.login(), id);
+        verifyPhoneNumberExists(userData.phoneNumber(), id);
         user.edit(userData);
+        log.info("Usuário com ID: {} editado com sucesso", id);
         return user;
+    }
+
+    private void resourceBelongsUser(User user) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        User userAuthenticated = (User) auth.getPrincipal();
+        if ((!userAuthenticated.getId().equals(user.getId())) && userAuthenticated.getRole() != Role.ADMIN) throw new AccessResourceDeniedException("Você não tem permissão para este recurso");
+    }
+
+    private void verifyLoginExists(String login, Long id) {
+        if (login == null) return;
+
+        Boolean loginAlreadyUsed = (id != null)
+                ? repository.existsByLoginAndIdNot(login, id)
+                : repository.existsByLogin(login);
+
+        if (loginAlreadyUsed) throw new ResourceAlreadyExists("Login já está em uso, tente outro");
+    }
+
+    private void verifyPhoneNumberExists(String phoneNumber, Long id) {
+        if (phoneNumber == null) return;
+        Boolean phoneNumberAlreadyUsed = (id != null)
+                ? repository.existsByPhoneNumberAndIdNot(phoneNumber, id)
+                : repository.existsByPhoneNumber(phoneNumber);
+
+        if (phoneNumberAlreadyUsed) throw new ResourceAlreadyExists("Login já está em uso, tente outro");
     }
 }
