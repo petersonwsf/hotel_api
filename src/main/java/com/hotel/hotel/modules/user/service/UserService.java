@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -54,7 +53,7 @@ public class UserService {
     }
 
     public Page<User> list(Pageable pagination, UserFilters filters) {
-        Specification<User> specification = ((root, query, criteriaBuilder) -> null);
+        Specification<User> specification = (root, query, criteriaBuilder) -> null;
 
         specification = specification
                 .and(UserSpecification.filterByName(filters.name()))
