@@ -3,13 +3,11 @@ package com.hotel.hotel.modules.reservation.dtos;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.hotel.hotel.modules.client.dtos.ClientDetailsDTO;
 import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.reservation.model.Source;
 import com.hotel.hotel.modules.reservation.model.Status;
 import com.hotel.hotel.modules.room.dtos.RoomDetailsDTO;
 import com.hotel.hotel.modules.user.dtos.UserResponseDTO;
-import com.hotel.hotel.modules.user.model.User;
 
 public record ReservationDetailsDTO(
     Long id,

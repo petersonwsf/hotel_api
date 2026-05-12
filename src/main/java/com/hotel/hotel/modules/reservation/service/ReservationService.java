@@ -2,7 +2,6 @@ package com.hotel.hotel.modules.reservation.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
 import com.hotel.hotel.modules.user.model.Role;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.infra.exceptions.RoomNotAvailable;
-import com.hotel.hotel.modules.client.service.ClientService;
 import com.hotel.hotel.modules.reservation.dtos.ReservationEditDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationFilters;
 import com.hotel.hotel.modules.reservation.dtos.ReservationSaveDTO;
