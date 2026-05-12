@@ -24,7 +24,7 @@ public record ReservationSaveDTO(
     @NotNull
     Source source,
     @NotNull
-    Long clientId,
+    Long userId,
     @NotNull
     Long roomId
 ) {}

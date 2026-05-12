@@ -2,7 +2,6 @@ package com.hotel.hotel.infra.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,10 +20,10 @@ public class RequestExceptionHandler {
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied() {
+    @ExceptionHandler(AccessResourceDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessResourceDeniedException exception) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ErrorResponse("Você não tem permissão para realizar esta ação."));
+                .body(new ErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -40,22 +39,22 @@ public class RequestExceptionHandler {
 
     @ExceptionHandler(ResourceAlreadyExists.class)
     public ResponseEntity alreadyExists(ResourceAlreadyExists error) {
-        return ResponseEntity.status(409).body(new Error(error.getMessage()));
+        return ResponseEntity.status(409).body(new ErrorResponse(error.getMessage()));
     }
 
     @ExceptionHandler(RoomNotAvailable.class)
     public ResponseEntity roomNotAvailable(RoomNotAvailable error) {
-        return ResponseEntity.status(409).body(new Error(error.getMessage()));
+        return ResponseEntity.status(409).body(new ErrorResponse(error.getMessage()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity alreadyExists(ResourceNotFoundException error) {
-        return ResponseEntity.status(404).body(new Error(error.getMessage()));
+    public ResponseEntity resourceNotFound(ResourceNotFoundException error) {
+        return ResponseEntity.status(404).body(new ErrorResponse(error.getMessage()));
     }
 
     @ExceptionHandler(MyCustomStorageException.class)
     public ResponseEntity minioError(MyCustomStorageException error) {
-        return ResponseEntity.status(500).body(new Error(error.getMessage()));
+        return ResponseEntity.status(500).body(new ErrorResponse(error.getMessage()));
     }
 
     private record ErrorData(String field, String error) {

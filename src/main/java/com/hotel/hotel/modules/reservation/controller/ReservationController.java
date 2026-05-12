@@ -37,10 +37,10 @@ public class ReservationController {
     @PostMapping
     @Transactional
     public ResponseEntity create(@RequestBody @Valid ReservationSaveDTO data, UriComponentsBuilder uriBuilder) {
-        log.info("Received a request to create a reservation for client ID: {} ", data.clientId());
+        log.info("Received a request to create a reservation for client ID: {} ", data.userId());
         Reservation reservation = service.create(data);
         var uri = uriBuilder.path("/reservation/{id}").buildAndExpand(reservation.getId()).toUri();
-        log.info("Reservation for client ID: {} was successfully created", data.clientId());
+        log.info("Reservation for client ID: {} was successfully created", data.userId());
         return ResponseEntity.created(uri).body(new ReservationDetailsDTO(reservation));
     }
 
@@ -105,11 +105,11 @@ public class ReservationController {
         return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
     }
 
-    @GetMapping("/client/{clientId}")
-    public ResponseEntity<Page<ReservationDetailsDTO>> listReservationsByClient(@PathVariable Long clientId, Pageable pagination) {
-        log.info("Received a request to list reservation of client with ID: {} ", clientId);
-        var reservations = service.listReservationsByClient(clientId, pagination).map(ReservationDetailsDTO::new);
-        log.info("Responding a request to list reservations of client with ID: {}", clientId);
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<ReservationDetailsDTO>> listReservationsByClient(@PathVariable Long userId, Pageable pagination) {
+        log.info("Received a request to list reservation of client with ID: {} ", userId);
+        var reservations = service.listReservationsByUser(userId, pagination).map(ReservationDetailsDTO::new);
+        log.info("Responding a request to list reservations of client with ID: {}", userId);
         return ResponseEntity.ok(reservations);
     }
 }

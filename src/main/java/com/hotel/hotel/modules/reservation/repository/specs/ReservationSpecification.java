@@ -39,10 +39,10 @@ public class ReservationSpecification {
         };
     }
 
-    public static Specification<Reservation> clientIdEqual(Long clientId) {
+    public static Specification<Reservation> userIdEqual(Long userId) {
         return (root, query, criteriaBuilder) -> {
-            if (clientId == null) return null;
-            return criteriaBuilder.equal(root.get("client").get("id"), clientId);
+            if (userId == null) return null;
+            return criteriaBuilder.equal(root.get("user").get("id"), userId);
         };
     }
 

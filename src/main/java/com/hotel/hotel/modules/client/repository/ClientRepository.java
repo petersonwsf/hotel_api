@@ -17,4 +17,10 @@ public interface ClientRepository extends JpaRepository<Client, Long>, JpaSpecif
     Optional<Client> findByContactInformation_PhoneNumber(String phoneNumber);
     Optional<Client> findByPin(String pin);
     Optional<Client> findByUserId(Long userId);
+    Boolean existsByEmail(String email);
+    Boolean existsByPin(String pin);
+    Boolean existsByContactInformation_PhoneNumber(String phoneNumber);
+    Boolean existsByEmailAndIdNot(String email, Long id);
+    Boolean existsByPinAndIdNot(String pin, Long id);
+    Boolean existsByContactInformation_PhoneNumberAndIdNot(String phoneNumber, Long id);
 }

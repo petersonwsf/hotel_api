@@ -1,13 +1,9 @@
 package com.hotel.hotel.modules.client.model;
 
 import java.time.LocalDate;
-import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hotel.hotel.modules.client.dtos.ClientEditDTO;
 import com.hotel.hotel.modules.client.dtos.ClientSaveDTO;
 import com.hotel.hotel.modules.contactInformation.model.ContactInformation;
-import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.user.model.User;
 
 import jakarta.persistence.Embedded;
@@ -16,7 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -44,10 +39,6 @@ public class Client {
 
     @Embedded
     private ContactInformation contactInformation;
-
-    @OneToMany(mappedBy = "client")
-    @JsonIgnore
-    private List<Reservation> reservations;
 
     public Client(ClientSaveDTO data, User user) {
         this.deleted = false;
