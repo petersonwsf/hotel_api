@@ -4,7 +4,6 @@ import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.files.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +22,6 @@ public class FileController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity deleteById(@PathVariable Long id) {
         service.deleteById(id);
         return ResponseEntity.noContent().build();

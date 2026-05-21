@@ -2,6 +2,7 @@ package com.hotel.hotel.modules.files.service;
 
 import com.hotel.hotel.infra.exceptions.MyCustomStorageException;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
+import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.files.model.File;
 import com.hotel.hotel.modules.files.repository.FileRepository;
@@ -32,6 +33,7 @@ public class FileService {
     @Value("${minio.bucket}")
     private String bucketName;
 
+    @Auditable(action = "FILE_UPDATE", resourceType = "FILE")
     public void uploadFile(MultipartFile fileData, String objectName, Room room, User user) {
         try {
             log.info("Start process to upload file: {}", fileData.getOriginalFilename());
@@ -67,6 +69,7 @@ public class FileService {
         return images;
     }
 
+    @Auditable(action = "FILE_DELETE", resourceType = "FILE")
     public void deleteById(Long id) {
         log.info("Start process to delete file with id: {}", id);
         File file = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("File does not exists"));

@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,7 +34,6 @@ public class ReservationController {
     private ReservationService service;
     
     @PostMapping
-    @Transactional
     public ResponseEntity create(@RequestBody @Valid ReservationSaveDTO data, UriComponentsBuilder uriBuilder) {
         log.info("Received a request to create a reservation for client ID: {} ", data.userId());
         Reservation reservation = service.create(data);
@@ -53,7 +51,6 @@ public class ReservationController {
     }
 
     @PatchMapping("/{id}")
-    @Transactional
     public ResponseEntity edit(@RequestBody @Valid ReservationEditDTO data, @PathVariable Long id) {
         log.info("Received a request to edit a reservation ID: {} ", id);
         var reservation = service.edit(data, id);
@@ -62,7 +59,6 @@ public class ReservationController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
         log.info("Received a request to delete a reservation ID: {} ", id);
         service.cancel(id);
@@ -71,7 +67,6 @@ public class ReservationController {
     }
 
     @PatchMapping("/confirm/{id}")
-    @Transactional
     public ResponseEntity confirm(@PathVariable Long id) {
         log.info("Received a request to confirm a reservation ID: {} ", id);
         service.confirm(id);
@@ -80,7 +75,6 @@ public class ReservationController {
     }
 
     @PatchMapping("/checkIn/{id}")
-    @Transactional
     public ResponseEntity checkIn(@PathVariable Long id) {
         log.info("Received a request to check-in a reservation ID: {} ", id);
         service.checkIn(id);
@@ -89,7 +83,6 @@ public class ReservationController {
     }
 
     @PatchMapping("/checkOut/{id}")
-    @Transactional
     public ResponseEntity checkOut(@PathVariable Long id) {
         log.info("Received a request to check-out a reservation ID: {} ", id);
         service.checkOut(id);
