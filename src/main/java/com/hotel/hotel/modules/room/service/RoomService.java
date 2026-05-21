@@ -1,5 +1,9 @@
 package com.hotel.hotel.modules.room.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hotel.hotel.modules.audit.AuditService;
+import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.files.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,7 +35,12 @@ public class RoomService {
     private RoomRepository repository;
     @Autowired
     private FileService fileService;
-    
+    @Autowired
+    private AuditService auditService;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Auditable(action = "ROOM_CREATE", resourceType = "ROOM")
     public Room create(RoomSaveDTO data, List<MultipartFile> files) {
         log.info("Starting process to create room");
         var roomCodeAlreadyExists = repository.findByCode(data.code());
@@ -81,12 +90,19 @@ public class RoomService {
         log.info("Starting process to edit room with ID: {}", id);
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
-
+        String beforeUpdate = null;
+        try {
+            beforeUpdate = objectMapper.writeValueAsString(room);
+        } catch (JsonProcessingException e) {
+            log.warn("Erro ao processar JSON para auditoria " + e);
+        }
         room.edit(data);
+        auditService.recordUpdate("ROOM_UPDATE", "ROOM", String.valueOf(id), beforeUpdate, room);
         log.info("Room with ID: {} successfully edited", id);
         return room;
     }
 
+    @Auditable(action = "FINISH_CLEANING_ROOM", resourceType = "ROOM")
     public void finishCleaning(Long id) {
         log.info("Starting process to clean room with ID: {}", id);
         var room = getDetails(id);
@@ -94,6 +110,7 @@ public class RoomService {
         log.info("Room with ID: {} successfully cleaned", id);
     }
 
+    @Auditable(action = "ROOM_DELETE", resourceType = "ROOM")
     public void delete(Long id) {
         log.info("Starting process to delete room with ID: {}", id);
         var room = repository.findById(id)

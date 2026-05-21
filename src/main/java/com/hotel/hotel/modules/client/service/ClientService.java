@@ -1,6 +1,10 @@
 package com.hotel.hotel.modules.client.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
+import com.hotel.hotel.modules.audit.AuditService;
+import com.hotel.hotel.modules.audit.Auditable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +36,14 @@ public class ClientService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private AuditService auditService;
+
+
+    @Auditable(action = "CLIENT_CREATE", resourceType = "CLIENT")
     public Client create(ClientSaveDTO data) {
         log.info("Starting process to create client {}", data.name());
 
@@ -66,6 +78,12 @@ public class ClientService {
     public Client edit(ClientEditDTO data, Long id) {
         log.info("Starting process to edit client eith ID: {}", data.id());
         Client client = getById(id);
+        String beforeUpdate = null;
+        try {
+            beforeUpdate = objectMapper.writeValueAsString(client);
+        } catch (JsonProcessingException e) {
+            log.warn("Erro ao processar JSON para auditoria " + e);
+        }
         userHasPermission(client);
         if (data.email() != null) {
             verifyEmailExists(data.email(), id);
@@ -74,23 +92,27 @@ public class ClientService {
             verifyPhoneNumberExists(data.contactInformation().phoneNumber(), id);
         }
         client.edit(data);
+        auditService.recordUpdate("CLIENT_UPDATE", "CLIENT", String.valueOf(id), beforeUpdate, client);
         log.info("Client with ID: {} successfully edited");
         return client;
     }
 
+    @Auditable(action = "CLIENT_DELETE", resourceType = "CLIENT")
     public void deleteById(Long id) {
         Client client = getById(id);
         userHasPermission(client);
         client.delete();
     }
 
+    @Auditable(action = "CLIENT_GET_BY_ID", resourceType = "CLIENT")
     public Client getById(Long id) {
         Client client = repository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         userHasPermission(client);
         return client;
     }
-    
+
+    @Auditable(action = "CLIENT_GET_BY_USER_ID", resourceType = "CLIENT")
     public Client getClientByUserId(Long id) {
         Client client = repository.findByUserId(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with user id " + id + " does not exists"));

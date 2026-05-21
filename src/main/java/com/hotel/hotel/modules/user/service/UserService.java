@@ -1,9 +1,13 @@
 package com.hotel.hotel.modules.user.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.infra.security.TokenService;
+import com.hotel.hotel.modules.audit.AuditService;
+import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.user.dtos.UserEditDTO;
 import com.hotel.hotel.modules.user.dtos.UserFilters;
 import com.hotel.hotel.modules.user.dtos.UserLoginDTO;
@@ -21,6 +25,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -30,11 +35,18 @@ public class UserService {
     private TokenService tokenService;
 
     @Autowired
+    private AuditService auditService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private AuthenticationManager manager;
 
     @Autowired
     private UserRepository repository;
 
+    @Auditable(action = "USER_RESGISTER", resourceType = "USER")
     public String register(UserSaveDTO userData) {
         User user = new User(userData);
         verifyLoginExists(userData.login(), null);
@@ -44,6 +56,7 @@ public class UserService {
         return tokenService.createToken(user);
     }
 
+    @Auditable(action = "USER_LOGIN", resourceType = "USER")
     public String login(UserLoginDTO credentials) {
         var token = new UsernamePasswordAuthenticationToken(credentials.login(), credentials.password());
         log.info("Authentication token generated");
@@ -70,6 +83,8 @@ public class UserService {
         return repository.findAll(specification, pagination);
     }
 
+    @Auditable(action = "USER_DELETE", resourceType = "USER")
+    @Transactional
     public void delete(Long id) {
         log.info("Deletando usuário com Id: {}", id);
         User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
@@ -78,13 +93,21 @@ public class UserService {
         log.info("Usuário com ID: {} deletado com sucesso", id);
     }
 
+    @Transactional
     public User edit(UserEditDTO userData, long id) {
         log.info("Editando usuário com ID: {}", id);
         User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        String beforeUpdate = null;
+        try {
+            beforeUpdate = objectMapper.writeValueAsString(user);
+        } catch (JsonProcessingException e) {
+            log.warn("Não foi possível tratar o JSON para auditoria " + e);
+        }
         resourceBelongsUser(user);
         verifyLoginExists(userData.login(), id);
         verifyPhoneNumberExists(userData.phoneNumber(), id);
         user.edit(userData);
+        auditService.recordUpdate("UPDATE_USER", "USER", String.valueOf(id), beforeUpdate, user);
         log.info("Usuário com ID: {} editado com sucesso", id);
         return user;
     }
@@ -104,6 +127,7 @@ public class UserService {
 
         if (loginAlreadyUsed) throw new ResourceAlreadyExists("Login já está em uso, tente outro");
     }
+
 
     private void verifyPhoneNumberExists(String phoneNumber, Long id) {
         if (phoneNumber == null) return;

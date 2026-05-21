@@ -3,7 +3,11 @@ package com.hotel.hotel.modules.reservation.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
+import com.hotel.hotel.modules.audit.AuditService;
+import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.service.UserService;
@@ -40,8 +44,15 @@ public class ReservationService {
     private UserService userService;
 
     @Autowired
+    private AuditService auditService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private ReservationRepository repository;
 
+    @Auditable(action = "RESERVATION_CREATE", resourceType = "RESERVATION")
     public Reservation create(ReservationSaveDTO data) {
         log.info("Starting process to create reservation for client with ID: {}", data.userId());
         var user = userService.findById(data.userId());
@@ -83,6 +94,12 @@ public class ReservationService {
     public Reservation edit(ReservationEditDTO data, Long id) {
         log.info("Starting process to edit reservation with ID: {}", id);
         var reservation = getById(id);
+        String beforeUpdate = null;
+        try {
+            beforeUpdate = objectMapper.writeValueAsString(reservation);
+        } catch (JsonProcessingException e) {
+            log.warn("Erro ao processar JSON para auditoria " + e);
+        }
         userHasPermission(reservation);
         validateReservationDate(data.checkInDate(), data.checkOutDate(), reservation.getRoom().getId(), reservation.getId());
 
@@ -91,7 +108,6 @@ public class ReservationService {
             reservation.assignRoom(newRoom);
         }
         reservation.edit(data);
-
         log.info("Recalculating values");
         BigDecimal totalAmount = calculateTotalAmount(
                 reservation.getCheckInDate(),
@@ -100,11 +116,13 @@ public class ReservationService {
                 reservation.getServiceFee(),
                 reservation.getDiscountAmount());
         reservation.setTotalAmount(totalAmount);
+        auditService.recordUpdate("RESERVATION_UPDATE", "RESERVATION", String.valueOf(id), beforeUpdate, reservation);
         log.info("Reservation with ID: {} was successfully edited", id);
         return reservation;
     }
 
     @Transactional
+    @Auditable(action = "RESERVATION_CANCEL", resourceType = "RESERVATION")
     public void cancel(Long id) {
         log.info("Canceling reservation with ID: {}" , id);
         var reservation = getById(id);
@@ -114,6 +132,7 @@ public class ReservationService {
     }
 
     @Transactional
+    @Auditable(action = "RESERVATION_CONFIRM", resourceType = "RESERVATION")
     public void confirm(Long id) {
         log.info("Confirming reservation with ID: {}" , id);
         var reservation = getById(id);
@@ -122,6 +141,7 @@ public class ReservationService {
         log.info("Reservation with ID: {} successfully confirmed" , id);
     }
 
+    @Auditable(action = "RESERVATION_CHECKIN", resourceType = "RESERVATION")
     public void checkIn(Long id) {
         log.info("Checking in to the reservation with ID: {}", id);
         var reservation = getById(id);
@@ -131,6 +151,7 @@ public class ReservationService {
         reservation.changeStatus(Status.CHECKED_IN);
     }
 
+    @Auditable(action = "RESERVATION_CHECKOUT", resourceType = "RESERVATION")
     public void checkOut(Long id) {
         log.info("Checking out to the reservation with ID: {}", id);
         var reservation = getById(id);
@@ -140,6 +161,7 @@ public class ReservationService {
         reservation.changeStatus(Status.CHECKED_OUT);
     }
 
+    @Auditable(action = "RESERVATION_LIST_BY_USER", resourceType = "RESERVATION")
     public Page<Reservation> listReservationsByUser(Long clientId, Pageable pagination) {
         log.info("Listing reservations of the client with ID: {}", clientId);
         Page<Reservation> reservations = repository.findByUserId(clientId, pagination);
