@@ -44,10 +44,4 @@ public class AuditEvent {
     @Column(name = "trace_id", length = 64)
     private String traceId;
 
-    @PrePersist
-    private void prePersist() {
-        if (this.createdAt == null) {
-            this.createdAt = Instant.now();
-        }
-    }
 }

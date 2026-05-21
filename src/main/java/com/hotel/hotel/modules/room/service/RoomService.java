@@ -22,6 +22,7 @@ import com.hotel.hotel.modules.room.repository.RoomRepository;
 import com.hotel.hotel.modules.room.repository.specs.RoomSpecification;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -41,6 +42,7 @@ public class RoomService {
     private ObjectMapper objectMapper;
 
     @Auditable(action = "ROOM_CREATE", resourceType = "ROOM")
+    @Transactional
     public Room create(RoomSaveDTO data, List<MultipartFile> files) {
         log.info("Starting process to create room");
         var roomCodeAlreadyExists = repository.findByCode(data.code());
@@ -86,6 +88,7 @@ public class RoomService {
         return room;
     }
 
+    @Transactional
     public Room edit(RoomEditDTO data, Long id) {
         log.info("Starting process to edit room with ID: {}", id);
         var room = repository.findById(id)
@@ -103,6 +106,7 @@ public class RoomService {
     }
 
     @Auditable(action = "FINISH_CLEANING_ROOM", resourceType = "ROOM")
+    @Transactional
     public void finishCleaning(Long id) {
         log.info("Starting process to clean room with ID: {}", id);
         var room = getDetails(id);
@@ -111,6 +115,7 @@ public class RoomService {
     }
 
     @Auditable(action = "ROOM_DELETE", resourceType = "ROOM")
+    @Transactional
     public void delete(Long id) {
         log.info("Starting process to delete room with ID: {}", id);
         var room = repository.findById(id)

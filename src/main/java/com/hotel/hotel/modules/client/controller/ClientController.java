@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -41,7 +40,6 @@ public class ClientController {
     private TokenService tokenService;
 
     @PostMapping
-    @Transactional
     public ResponseEntity create(@RequestBody @Valid ClientSaveDTO data, UriComponentsBuilder uriBuilder) {
         log.info("Received a request to create client named {}", data.name());
         Client client = service.create(data);
@@ -60,7 +58,6 @@ public class ClientController {
     }
     
     @PatchMapping("/{id}")
-    @Transactional
     public ResponseEntity edit(@RequestBody @Valid ClientEditDTO data, @PathVariable Long id) {
         log.info("Received a request to edit client with ID {}", id);
         Client client = service.edit(data, id);
@@ -69,7 +66,6 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
         log.info("Received a request to delete client with ID {}", id);
         service.deleteById(id);

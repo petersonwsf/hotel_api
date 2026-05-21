@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -32,7 +31,6 @@ public class RoomController {
     private RoomService service;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Transactional
     public ResponseEntity create(@RequestPart("room_data") @Valid RoomSaveDTO data, @RequestPart("images") List<MultipartFile> files, UriComponentsBuilder uriBuilder) {
         log.info("Received a request to create a room");
         Room room = service.create(data, files);
@@ -50,7 +48,6 @@ public class RoomController {
     }
 
     @PatchMapping("/{id}")
-    @Transactional
     public ResponseEntity edit(@RequestBody @Valid RoomEditDTO data, @PathVariable Long id) {
         log.info("Received request to edit room with ID: {}", id);
         var room = service.edit(data, id);
@@ -68,7 +65,6 @@ public class RoomController {
 
 
     @PatchMapping("/finishCleaning/{id}")
-    @Transactional
     public ResponseEntity finishCleaning(@PathVariable Long id) {
         log.info("Received request to clean room with ID: {}", id);
         service.finishCleaning(id);
@@ -77,7 +73,6 @@ public class RoomController {
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity delete(@PathVariable Long id) {
         log.info("Received request to delete room with ID: {}", id);
         service.delete(id);

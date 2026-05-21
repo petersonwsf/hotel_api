@@ -25,6 +25,7 @@ import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -44,6 +45,7 @@ public class ClientService {
 
 
     @Auditable(action = "CLIENT_CREATE", resourceType = "CLIENT")
+    @Transactional
     public Client create(ClientSaveDTO data) {
         log.info("Starting process to create client {}", data.name());
 
@@ -75,6 +77,7 @@ public class ClientService {
         return repository.findAll(filters, pagination);
     }
 
+    @Transactional
     public Client edit(ClientEditDTO data, Long id) {
         log.info("Starting process to edit client eith ID: {}", data.id());
         Client client = getById(id);
@@ -98,6 +101,7 @@ public class ClientService {
     }
 
     @Auditable(action = "CLIENT_DELETE", resourceType = "CLIENT")
+    @Transactional
     public void deleteById(Long id) {
         Client client = getById(id);
         userHasPermission(client);

@@ -53,6 +53,7 @@ public class ReservationService {
     private ReservationRepository repository;
 
     @Auditable(action = "RESERVATION_CREATE", resourceType = "RESERVATION")
+    @Transactional
     public Reservation create(ReservationSaveDTO data) {
         log.info("Starting process to create reservation for client with ID: {}", data.userId());
         var user = userService.findById(data.userId());
@@ -91,6 +92,7 @@ public class ReservationService {
         return reservation;
     }
 
+    @Transactional
     public Reservation edit(ReservationEditDTO data, Long id) {
         log.info("Starting process to edit reservation with ID: {}", id);
         var reservation = getById(id);
@@ -142,6 +144,7 @@ public class ReservationService {
     }
 
     @Auditable(action = "RESERVATION_CHECKIN", resourceType = "RESERVATION")
+    @Transactional
     public void checkIn(Long id) {
         log.info("Checking in to the reservation with ID: {}", id);
         var reservation = getById(id);
@@ -152,6 +155,7 @@ public class ReservationService {
     }
 
     @Auditable(action = "RESERVATION_CHECKOUT", resourceType = "RESERVATION")
+    @Transactional
     public void checkOut(Long id) {
         log.info("Checking out to the reservation with ID: {}", id);
         var reservation = getById(id);
