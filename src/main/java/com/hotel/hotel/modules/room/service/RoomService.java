@@ -55,8 +55,6 @@ public class RoomService {
         var newRoom = repository.save(room);
         log.info("Room successfully created in the database");
 
-        List<FileResponse> images = List.of();
-
         for (MultipartFile file : files) {
             String minioKey = UUID.randomUUID().toString();
             fileService.uploadFile(file, minioKey, newRoom, null);

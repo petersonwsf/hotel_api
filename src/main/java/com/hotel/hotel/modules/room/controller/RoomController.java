@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hotel.hotel.infra.dtos.MessageResponse;
-import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.room.service.RoomService;
 
 import jakarta.validation.Valid;

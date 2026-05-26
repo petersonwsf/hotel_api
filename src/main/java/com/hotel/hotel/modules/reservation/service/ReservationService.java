@@ -29,7 +29,6 @@ import com.hotel.hotel.modules.reservation.model.Status;
 import com.hotel.hotel.modules.reservation.repository.ReservationRepository;
 import com.hotel.hotel.modules.reservation.repository.specs.ReservationSpecification;
 import com.hotel.hotel.modules.room.model.StatusRoom;
-import com.hotel.hotel.modules.room.service.RoomService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
