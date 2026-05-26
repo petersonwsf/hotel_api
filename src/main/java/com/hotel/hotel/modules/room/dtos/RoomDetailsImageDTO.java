@@ -1,11 +1,14 @@
 package com.hotel.hotel.modules.room.dtos;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.room.model.Category;
 import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 
-public record RoomDetailsDTO(
+public record RoomDetailsImageDTO(
         Long id,
         String code,
         String floor,
@@ -15,9 +18,10 @@ public record RoomDetailsDTO(
         String bedconfig,
         String amenities,
         Integer capacity,
-        Category category
+        Category category,
+        List<FileResponse> images
 ) {
-    public RoomDetailsDTO(Room room) {
+    public RoomDetailsImageDTO(Room room, List<FileResponse> images) {
         this(
                 room.getId(),
                 room.getCode(),
@@ -28,7 +32,8 @@ public record RoomDetailsDTO(
                 room.getBedConfig(),
                 room.getAmenities(),
                 room.getCapacity(),
-                room.getCategory()
+                room.getCategory(),
+                images
         );
     }
 }

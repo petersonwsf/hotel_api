@@ -1,7 +1,9 @@
 package com.hotel.hotel.modules.room.dtos;
 
 import java.math.BigDecimal;
+import java.util.List;
 
+import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.room.model.Category;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 
@@ -17,6 +19,7 @@ public record RoomEditDTO(
     String amenities,
     @Min(value = 1)
     Integer capacity,
-    Category category
+    Category category,
+    List<FileResponse> remainingImages
 ) {
 }
