@@ -34,7 +34,7 @@ public class FileService {
     private String bucketName;
 
     @Auditable(action = "FILE_UPDATE", resourceType = "FILE")
-    public void uploadFile(MultipartFile fileData, String objectName, Room room, User user) {
+    public FileResponse uploadFile(MultipartFile fileData, String objectName, Room room, User user) {
         try {
             log.info("Start process to upload file: {}", fileData.getOriginalFilename());
             minioClient.putObject(
@@ -49,6 +49,7 @@ public class FileService {
             File file = new File(objectName, fileData, null, room, user);
             repository.save(file);
             log.info("File {} successfully created", fileData.getOriginalFilename());
+            return new FileResponse(file, getFileUrl(objectName));
         } catch (ErrorResponseException e) {
             throw new MyCustomStorageException(e.getMessage());
         } catch (IOException e) {

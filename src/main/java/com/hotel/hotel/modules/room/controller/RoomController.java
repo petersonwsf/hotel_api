@@ -1,5 +1,6 @@
 package com.hotel.hotel.modules.room.controller;
 
+import com.hotel.hotel.modules.room.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,10 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hotel.hotel.infra.dtos.MessageResponse;
-import com.hotel.hotel.modules.room.dtos.RoomDetailsDTO;
-import com.hotel.hotel.modules.room.dtos.RoomEditDTO;
-import com.hotel.hotel.modules.room.dtos.RoomFilters;
-import com.hotel.hotel.modules.room.dtos.RoomSaveDTO;
 import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.room.service.RoomService;
 
@@ -33,24 +30,24 @@ public class RoomController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity create(@RequestPart("room_data") @Valid RoomSaveDTO data, @RequestPart("images") List<MultipartFile> files, UriComponentsBuilder uriBuilder) {
         log.info("Received a request to create a room");
-        Room room = service.create(data, files);
+        var room = service.create(data, files);
         var uri = uriBuilder.path("/room/{id}").buildAndExpand(room.getId()).toUri();
         log.info("Room was successfully created");
         return ResponseEntity.created(uri).body(new RoomDetailsDTO(room));
     }
 
     @GetMapping
-    public ResponseEntity<Page<RoomDetailsDTO>> list(RoomFilters filters, Pageable pagination) {
+    public ResponseEntity<Page<RoomListDTO>> list(RoomFilters filters, Pageable pagination) {
         log.info("Received request to list rooms");
-        var rooms = service.list(filters, pagination).map(RoomDetailsDTO::new);
+        var rooms = service.list(filters, pagination);
         log.info("Responding request to list rooms");
         return ResponseEntity.ok(rooms);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity edit(@RequestBody @Valid RoomEditDTO data, @PathVariable Long id) {
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity edit(@RequestPart("room_data") @Valid RoomEditDTO data, @RequestPart(value = "images", required = false) List<MultipartFile> files,  @PathVariable Long id) {
         log.info("Received request to edit room with ID: {}", id);
-        var room = service.edit(data, id);
+        var room = service.edit(data, id, files);
         log.info("Room with ID: {} was successfully edited", id);
         return ResponseEntity.ok(new RoomDetailsDTO(room));
     }
@@ -60,7 +57,7 @@ public class RoomController {
         log.info("Received request to retrieve rooms details with ID: {}", id);
         var room = service.getDetails(id);
         log.info("Room with ID: {} successfully retrieved");
-        return ResponseEntity.ok(new RoomDetailsDTO(room));
+        return ResponseEntity.ok(room);
     }
 
 

@@ -40,6 +40,7 @@ public class AuditEvent {
     @Column(name = "error_message", length = 500)
     private String errorMessage;
     @Column(name = "created_at", nullable = false)
+    @Builder.Default
     private Instant createdAt = Instant.now();
     @Column(name = "trace_id", length = 64)
     private String traceId;

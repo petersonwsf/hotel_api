@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
+import com.hotel.hotel.modules.room.repository.RoomRepository;
 import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.service.UserService;
@@ -38,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReservationService {
     
     @Autowired
-    private RoomService roomService;
+    private RoomRepository roomRepository;
     
     @Autowired
     private UserService userService;
@@ -57,7 +58,7 @@ public class ReservationService {
     public Reservation create(ReservationSaveDTO data) {
         log.info("Starting process to create reservation for client with ID: {}", data.userId());
         var user = userService.findById(data.userId());
-        var room = roomService.getDetails(data.roomId());
+        var room = roomRepository.findById(data.roomId()).orElseThrow(() -> new ResourceNotFoundException("Quarto não encontrado"));
         validateReservationDate(data.checkInDate(), data.checkOutDate(), data.roomId(), null);
         BigDecimal totalAmount = calculateTotalAmount(data.checkInDate(), data.checkOutDate(), data.dailyRate(), data.serviceFee(), data.discountAmount());
         Reservation reservation = new Reservation(data);
@@ -106,7 +107,7 @@ public class ReservationService {
         validateReservationDate(data.checkInDate(), data.checkOutDate(), reservation.getRoom().getId(), reservation.getId());
 
         if (!data.roomId().equals(reservation.getRoom().getId())) {
-            var newRoom = roomService.getDetails(data.roomId());
+            var newRoom = roomRepository.findById(data.roomId()).orElseThrow(() -> new ResourceNotFoundException("Quarto não encontrado"));
             reservation.assignRoom(newRoom);
         }
         reservation.edit(data);
