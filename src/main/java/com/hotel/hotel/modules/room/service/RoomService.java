@@ -24,7 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -63,7 +65,7 @@ public class RoomService {
         return newRoom;
     }
 
-    public Page<RoomListDTO> list(RoomFilters filters, Pageable pagination) {
+    public Page<RoomListDTO> list(RoomFiltersDTO filters, Pageable pagination) {
         log.info("Starting listing rooms");
         Specification<Room> filter = (root, query, criteriaBuilder) -> null;
 
@@ -153,5 +155,13 @@ public class RoomService {
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
         repository.delete(room);
         log.info("Room with ID: {} successfully deleted", id);
+    }
+
+    @Auditable(action = "VERIFY_DISPONIBILITY", resourceType = "ROOM")
+    public Boolean verifyDisponibility(Long id, LocalDate checkIn, LocalDate checkOut) {
+        Specification<Room> specId = (root, query, cb) -> cb.equal(root.get("id"), id);
+        Specification<Room> specFinal = specId.and(RoomSpecification.roomAvailableOn(checkIn, checkOut));
+        Optional<Room> room = repository.findOne(specFinal);
+        return room.isPresent();
     }
 }

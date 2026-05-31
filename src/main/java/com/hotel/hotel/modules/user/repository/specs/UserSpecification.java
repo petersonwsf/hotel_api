@@ -36,7 +36,7 @@ public class UserSpecification {
     public static Specification<User> filterByRole(Role role) {
         return (root, query, criteriaBuilder) -> {
             if (role == null) return null;
-            return criteriaBuilder.equal(root.get("papel"), role);
+            return criteriaBuilder.equal(root.get("role"), role);
         };
     }
 }

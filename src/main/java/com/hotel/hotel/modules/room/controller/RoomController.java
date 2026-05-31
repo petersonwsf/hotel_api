@@ -36,7 +36,7 @@ public class RoomController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<RoomListDTO>> list(RoomFilters filters, Pageable pagination) {
+    public ResponseEntity<Page<RoomListDTO>> list(RoomFiltersDTO filters, Pageable pagination) {
         log.info("Received request to list rooms");
         var rooms = service.list(filters, pagination);
         log.info("Responding request to list rooms");
@@ -59,7 +59,6 @@ public class RoomController {
         return ResponseEntity.ok(room);
     }
 
-
     @PatchMapping("/finishCleaning/{id}")
     public ResponseEntity finishCleaning(@PathVariable Long id) {
         log.info("Received request to clean room with ID: {}", id);
@@ -74,5 +73,11 @@ public class RoomController {
         service.delete(id);
         log.info("Room with ID: {} was successfully deleted", id);
         return ResponseEntity.ok(new MessageResponse("Room deleted succesfully"));
+    }
+
+    @GetMapping("/disponibility/{id}")
+    public ResponseEntity verifyDisponibility(@PathVariable Long id, @Valid VerifyDisponibilityDTO dates) {
+        Boolean disponible = service.verifyDisponibility(id, dates.checkIn(), dates.checkOut());
+        return ResponseEntity.ok(disponible);
     }
 }
