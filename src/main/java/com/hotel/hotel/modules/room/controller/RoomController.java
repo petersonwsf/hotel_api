@@ -28,6 +28,7 @@ public class RoomController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity create(@RequestPart("room_data") @Valid RoomSaveDTO data, @RequestPart("images") List<MultipartFile> files, UriComponentsBuilder uriBuilder) {
+        System.out.println(data.amenities());
         log.info("Received a request to create a room");
         var room = service.create(data, files);
         var uri = uriBuilder.path("/room/{id}").buildAndExpand(room.getId()).toUri();

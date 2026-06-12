@@ -1,6 +1,7 @@
 package com.hotel.hotel.modules.room.dtos;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import com.hotel.hotel.modules.room.model.Category;
 import com.hotel.hotel.modules.room.model.StatusRoom;
@@ -23,17 +24,17 @@ public record RoomSaveDTO(
     @DecimalMin("100.00")
     BigDecimal customPrice,
 
-    @NotBlank
-    String bedconfig,
-
-    @NotBlank
-    String amenities,
+    @NotNull
+    List<String> amenities,
 
     @NotNull
     @Min(value = 1)
     Integer capacity,
 
     @NotNull
-    Category category
+    Category category,
+
+    @NotNull
+    String description
 
 ) {}
