@@ -9,17 +9,19 @@ import com.hotel.hotel.modules.room.model.StatusRoom;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 public record RoomEditDTO(
     StatusRoom status,
     @DecimalMin("100.00")
     BigDecimal customPrice,
     Long roomType,
-    String bedconfig,
-    String amenities,
+    List<String> amenities,
     @Min(value = 1)
     Integer capacity,
     Category category,
-    List<FileResponse> remainingImages
+    List<FileResponse> remainingImages,
+    @NotNull
+    String description
 ) {
 }

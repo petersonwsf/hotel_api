@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "room")
 @Entity(name = "Room")
+@Builder
 public class Room {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,8 +33,9 @@ public class Room {
     private String code;
     private String floor;
     private BigDecimal customPrice;
-    private String bedConfig;
-    private String amenities;
+    @Column(name = "amenities", columnDefinition = "text[]")
+    @Builder.Default
+    private String[] amenities = new String[0];
     private Integer capacity;
 
     @Enumerated(EnumType.STRING)
@@ -49,8 +52,7 @@ public class Room {
         this.floor = data.floor();
         this.customPrice = data.customPrice();
         this.status = data.status();
-        this.bedConfig = data.bedconfig();
-        this.amenities = data.amenities();
+        this.amenities = data.amenities().toArray(new String[0]);
         this.capacity = data.capacity();
         this.category = data.category();
         this.active = true;
@@ -60,11 +62,8 @@ public class Room {
         if (data.customPrice() != null) {
             this.customPrice = data.customPrice();
         }
-        if (data.bedconfig() != null) {
-            this.bedConfig = data.bedconfig();
-        }
         if (data.amenities() != null) {
-            this.amenities = data.amenities();
+            this.amenities = data.amenities().toArray(new String[0]);
         }
         if (data.capacity() != null) {
             this.capacity = data.capacity();

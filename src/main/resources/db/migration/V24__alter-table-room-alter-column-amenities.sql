@@ -1,0 +1,11 @@
+ALTER TABLE room
+ADD COLUMN IF NOT EXISTS description TEXT;
+
+ALTER TABLE room
+ALTER COLUMN amenities DROP DEFAULT;
+
+ALTER TABLE room
+ALTER COLUMN amenities TYPE text[] USING '{}';
+
+ALTER TABLE room
+ALTER COLUMN amenities SET DEFAULT '{}';

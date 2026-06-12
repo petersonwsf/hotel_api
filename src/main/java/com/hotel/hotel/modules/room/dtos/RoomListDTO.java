@@ -1,6 +1,8 @@
 package com.hotel.hotel.modules.room.dtos;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.room.model.Category;
@@ -14,8 +16,7 @@ public record RoomListDTO(
         BigDecimal customPrice,
         Boolean active,
         StatusRoom statusRoom,
-        String bedconfig,
-        String amenities,
+        List<String> amenities,
         Integer capacity,
         Category category,
         FileResponse images
@@ -28,8 +29,7 @@ public record RoomListDTO(
                 room.getCustomPrice(),
                 room.getActive(),
                 room.getStatus(),
-                room.getBedConfig(),
-                room.getAmenities(),
+                Arrays.asList(room.getAmenities()),
                 room.getCapacity(),
                 room.getCategory(),
                 images
