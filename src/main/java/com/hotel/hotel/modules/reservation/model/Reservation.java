@@ -50,9 +50,6 @@ public class Reservation {
     @Column(name = "status_reservation", nullable = false)
     @Enumerated(EnumType.STRING)
     private Status status;
-    @Column(name = "source_reservation", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Source source;
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -73,7 +70,6 @@ public class Reservation {
         this.discountAmount = data.discountAmount();
         this.serviceFee = data.serviceFee();
         this.status = Status.PENDING;
-        this.source = data.source();
     }
 
     public void edit(ReservationEditDTO data) {

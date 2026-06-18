@@ -77,7 +77,6 @@ public class ReservationService {
         filter = filter.and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
                 .and(ReservationSpecification.userIdEqual(filters.user()))
                 .and(ReservationSpecification.roomIdEqual(filters.room()))
-                .and(ReservationSpecification.sourceEqual(filters.source()))
                 .and(ReservationSpecification.statusEqual(filters.status()));
 
         log.info("Returning the reservations list");

@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.hotel.hotel.modules.reservation.model.Reservation;
-import com.hotel.hotel.modules.reservation.model.Source;
 import com.hotel.hotel.modules.reservation.model.Status;
 
 public class ReservationSpecification {
@@ -29,13 +28,6 @@ public class ReservationSpecification {
         return (root, query, criteriaBuilder) -> {
             if (status == null) return null;
             return criteriaBuilder.equal(root.get("status"), status);
-        };
-    }
-
-    public static Specification<Reservation> sourceEqual(Source source) {
-        return (root, query, criteriaBuilder) -> {
-            if (source == null) return null;
-            return criteriaBuilder.equal(root.get("source"), source);
         };
     }
 

@@ -31,5 +31,4 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
             @Param("endDate") LocalDate endDate,
             @Param("id") Long id
     );
-    
 }
