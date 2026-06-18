@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.hotel.hotel.modules.reservation.model.Reservation;
-import com.hotel.hotel.modules.reservation.model.Source;
 import com.hotel.hotel.modules.reservation.model.Status;
 import com.hotel.hotel.modules.room.dtos.RoomDetailsDTO;
 import com.hotel.hotel.modules.user.dtos.UserResponseDTO;
@@ -18,7 +17,6 @@ public record ReservationDetailsDTO(
     BigDecimal totalAmount,
     BigDecimal serviceFee,
     Status status,
-    Source source,
     RoomDetailsDTO room,
     UserResponseDTO user
 ) {
@@ -32,7 +30,6 @@ public record ReservationDetailsDTO(
             reservation.getTotalAmount(),
             reservation.getServiceFee(),
             reservation.getStatus(),
-            reservation.getSource(),
             new RoomDetailsDTO(reservation.getRoom()),
             new UserResponseDTO(reservation.getUser())
         );

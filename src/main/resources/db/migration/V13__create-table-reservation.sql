@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS reservations (
     room_id BIGSERIAL NOT NULL,
 
     CONSTRAINT fk_client FOREIGN KEY (client_id) REFERENCES client(id),
-    CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id)
+    CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES room(id) 
 );

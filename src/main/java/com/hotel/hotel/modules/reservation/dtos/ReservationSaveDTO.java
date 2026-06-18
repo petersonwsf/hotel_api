@@ -3,8 +3,6 @@ package com.hotel.hotel.modules.reservation.dtos;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.hotel.hotel.modules.reservation.model.Source;
-
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,8 +19,6 @@ public record ReservationSaveDTO(
     BigDecimal discountAmount,
     @NotNull
     BigDecimal serviceFee,
-    @NotNull
-    Source source,
     @NotNull
     Long userId,
     @NotNull

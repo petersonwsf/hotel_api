@@ -33,8 +33,8 @@ public class SecurityConfigurations {
                         //ROTAS PÚBLICAS
                         .requestMatchers(HttpMethod.POST, "/client").permitAll()
                         .requestMatchers(HttpMethod.GET, "/room", "/room/{id}").permitAll()
-                        .requestMatchers("/file/room/{id}", "/file/{id}").permitAll()
-                        .requestMatchers("/room/disponibility/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/file/room/{id}", "/file/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/room/disponibility/{id}").permitAll()
                         // ROTAS PRIVADAS
                         .requestMatchers(HttpMethod.GET, "/client").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/room").hasAuthority( "ROLE_ADMIN")

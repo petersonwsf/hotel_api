@@ -44,6 +44,9 @@ public class Room {
     @Column(nullable = false)
     private Boolean active;
 
+    @Column(nullable = false)
+    private String description;
+
     @Enumerated(EnumType.STRING)
     private StatusRoom status;
 

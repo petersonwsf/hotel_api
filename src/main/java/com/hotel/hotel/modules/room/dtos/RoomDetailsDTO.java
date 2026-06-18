@@ -15,6 +15,7 @@ public record RoomDetailsDTO(
         BigDecimal customPrice,
         Boolean active,
         StatusRoom status,
+        String description,
         List<String> amenities,
         Integer capacity,
         Category category
@@ -27,6 +28,7 @@ public record RoomDetailsDTO(
                 room.getCustomPrice(),
                 room.getActive(),
                 room.getStatus(),
+                room.getDescription(),
                 Arrays.asList(room.getAmenities()),
                 room.getCapacity(),
                 room.getCategory()
