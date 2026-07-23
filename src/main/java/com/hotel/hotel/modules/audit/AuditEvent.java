@@ -27,7 +27,7 @@ public class AuditEvent {
     private String actor;
     @Column(name = "actor_ip", length = 45)
     private String actorIp;
-    @Column(name = "user_agent", length = 255)
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
     @Column(name = "payload_before", columnDefinition = "TEXT")
     private String payloadBefore;
@@ -37,7 +37,7 @@ public class AuditEvent {
     private String extraData;
     @Enumerated(EnumType.STRING)
     private AuditOutcome outcome;
-    @Column(name = "error_message", length = 500)
+    @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
     @Column(name = "created_at", nullable = false)
     @Builder.Default

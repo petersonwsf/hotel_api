@@ -69,6 +69,11 @@ public class UserService {
         return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
+    public User findByLoginUser(String login) {
+        var user = repository.findByUsername(login);
+        return user; 
+    }
+
     public Page<User> list(Pageable pagination, UserFilters filters) {
         log.info("Listando usuários da página {} com tamanho {}", pagination.getPageNumber(), pagination.getPageSize());
         Specification<User> specification = (root, query, criteriaBuilder) -> null;

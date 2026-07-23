@@ -45,6 +45,7 @@ public class SecurityConfigurations {
                         .requestMatchers(HttpMethod.GET, "/reservation").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/file/{id}").hasAnyAuthority("ROLE_ATTENDANT", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/register").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/user").hasAuthority("ROLE_ADMIN")
                         .anyRequest().permitAll()
                 ).exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
