@@ -63,6 +63,9 @@ public class Client {
         if (data.contactInformation() != null) {
             this.contactInformation.edit(data.contactInformation());
         }
+        if (data.pin() != null) {
+            this.pin = data.pin();
+        }
     }
 
     public void delete() {

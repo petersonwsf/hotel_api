@@ -1,6 +1,7 @@
 package com.hotel.hotel.modules.reservation.repository.specs;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
 
@@ -24,10 +25,10 @@ public class ReservationSpecification {
         };
     }
 
-    public static Specification<Reservation> statusEqual(Status status) {
+    public static Specification<Reservation> statusIn(List<Status> status) {
         return (root, query, criteriaBuilder) -> {
-            if (status == null) return null;
-            return criteriaBuilder.equal(root.get("status"), status);
+            if (status == null || status.isEmpty()) return null;
+            return root.get("status").in(status);
         };
     }
 
@@ -44,7 +45,4 @@ public class ReservationSpecification {
             return criteriaBuilder.equal(root.get("room").get("id"), roomId);
         };
     }
-
-    
-    
 }

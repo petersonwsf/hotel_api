@@ -47,13 +47,13 @@ public class UserService {
     private UserRepository repository;
 
     @Auditable(action = "USER_RESGISTER", resourceType = "USER")
-    public String register(UserSaveDTO userData) {
-        User user = new User(userData);
+    public User register(UserSaveDTO userData) {
+        User newUser = new User(userData);
         verifyLoginExists(userData.login(), null);
         verifyPhoneNumberExists(userData.phoneNumber(), null);
-        repository.save(user);
+        User user = repository.save(newUser);
         log.info("User {} successfully created", userData.login());
-        return tokenService.createToken(user);
+        return user;
     }
 
     @Auditable(action = "USER_LOGIN", resourceType = "USER")

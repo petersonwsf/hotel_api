@@ -4,14 +4,10 @@ import java.time.LocalDate;
 
 import com.hotel.hotel.modules.contactInformation.dtos.ContactInformationDTO;
 
-import jakarta.validation.constraints.NotNull;
-
 public record ClientEditDTO(
-    
-    @NotNull
-    Long id, 
     String name, 
-    String email, 
+    String email,
+    String pin,
     LocalDate dateOfBirth, 
     ContactInformationDTO contactInformation
 ) {}
