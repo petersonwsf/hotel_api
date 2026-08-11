@@ -20,9 +20,11 @@ import com.hotel.hotel.modules.client.dtos.ClientSaveDTO;
 import com.hotel.hotel.modules.client.model.Client;
 import com.hotel.hotel.modules.client.repository.ClientRepository;
 import com.hotel.hotel.modules.client.repository.specs.ClientSpecification;
+import com.hotel.hotel.modules.user.dtos.UserSaveDTO;
 import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.repository.UserRepository;
+import com.hotel.hotel.modules.user.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +37,7 @@ public class ClientService {
     private ClientRepository repository;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -53,8 +55,8 @@ public class ClientService {
         verifyPhoneNumberExists(data.contactInformation().phoneNumber(), null);
         verifyPinExists(data.pin(), null);
 
-        User newUser = new User(data.name(), data.email(), data.password(), data.contactInformation().phoneNumber(), Role.CLIENT);
-        User user = userRepository.save(newUser);
+        UserSaveDTO newUser = new UserSaveDTO(data.name(), data.email(), data.password(), data.contactInformation().phoneNumber(), Role.CLIENT);
+        User user = userService.register(newUser);
 
         log.info("The client user {} was successfully created", data.name());
         Client client = new Client(data, user);
@@ -79,8 +81,9 @@ public class ClientService {
 
     @Transactional
     public Client edit(ClientEditDTO data, Long id) {
-        log.info("Starting process to edit client eith ID: {}", data.id());
+        log.info("Starting process to edit client eith ID: {}", id);
         Client client = getById(id);
+        User user = userService.findById(client.getUser().getId());
         String beforeUpdate = null;
         try {
             beforeUpdate = objectMapper.writeValueAsString(client);
@@ -94,6 +97,7 @@ public class ClientService {
         if (data.contactInformation() != null && data.contactInformation().phoneNumber() != null) {
             verifyPhoneNumberExists(data.contactInformation().phoneNumber(), id);
         }
+        updateUserByClient(user, data.name(), data.email(), data.contactInformation().phoneNumber());
         client.edit(data);
         auditService.recordUpdate("CLIENT_UPDATE", "CLIENT", String.valueOf(id), beforeUpdate, client);
         log.info("Client with ID: {} successfully edited");
@@ -151,4 +155,16 @@ public class ClientService {
         if ((client.getUser().getId() != user.getId()) && user.getRole() == Role.CLIENT) throw new AccessResourceDeniedException("Você não tem acesso a este recurso");
     }
 
+    @Transactional
+    private void updateUserByClient(User user, String name, String email, String phoneNumber) {
+        if (email != null) {
+            user.setLogin(email);
+        }
+        if (name != null) {
+            user.setPhoneNumber(name);
+        }
+        if (phoneNumber != null) {
+            user.setPhoneNumber(phoneNumber);
+        }
+    }
 }

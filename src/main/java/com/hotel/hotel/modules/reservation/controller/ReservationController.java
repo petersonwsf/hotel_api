@@ -1,5 +1,7 @@
 package com.hotel.hotel.modules.reservation.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +21,6 @@ import com.hotel.hotel.modules.reservation.dtos.ReservationDetailsDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationEditDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationFilters;
 import com.hotel.hotel.modules.reservation.dtos.ReservationSaveDTO;
-import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.reservation.service.ReservationService;
 
 import jakarta.validation.Valid;
@@ -36,16 +37,16 @@ public class ReservationController {
     @PostMapping
     public ResponseEntity create(@RequestBody @Valid ReservationSaveDTO data, UriComponentsBuilder uriBuilder) {
         log.info("Received a request to create a reservation for client ID: {} ", data.userId());
-        Reservation reservation = service.create(data);
-        var uri = uriBuilder.path("/reservation/{id}").buildAndExpand(reservation.getId()).toUri();
+        ReservationDetailsDTO reservation = service.create(data);
+        var uri = uriBuilder.path("/reservation/{id}").buildAndExpand(reservation.id()).toUri();
         log.info("Reservation for client ID: {} was successfully created", data.userId());
-        return ResponseEntity.created(uri).body(new ReservationDetailsDTO(reservation));
+        return ResponseEntity.created(uri).body(reservation);
     }
 
     @GetMapping
     public ResponseEntity<Page<ReservationDetailsDTO>> list(ReservationFilters filters, Pageable pagination) {
         log.info("Received a request to list reservations");
-        var reservations = service.list(filters, pagination).map(ReservationDetailsDTO::new);
+        var reservations = service.list(filters, pagination);
         log.info("Responding request to list reservations");
         return ResponseEntity.ok(reservations);
     }
@@ -55,7 +56,7 @@ public class ReservationController {
         log.info("Received a request to edit a reservation ID: {} ", id);
         var reservation = service.edit(data, id);
         log.info("Reservation with ID: {} was successfully edited", id);
-        return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
+        return ResponseEntity.ok(reservation);
     }
 
     @DeleteMapping("/{id}")
@@ -95,13 +96,13 @@ public class ReservationController {
         log.info("Received a request to retrieve a reservation ID: {} ", id);
         var reservation = service.getById(id);
         log.info("Reservation with ID: {} was successfully retrieved", id);
-        return ResponseEntity.ok(new ReservationDetailsDTO(reservation));
+        return ResponseEntity.ok(reservation);
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<ReservationDetailsDTO>> listReservationsByClient(@PathVariable Long userId, Pageable pagination) {
+    public ResponseEntity<Page<ReservationDetailsDTO>> listReservationsByClient(@PathVariable Long userId, ReservationFilters filters, Pageable pagination) {
         log.info("Received a request to list reservation of client with ID: {} ", userId);
-        var reservations = service.listReservationsByUser(userId, pagination).map(ReservationDetailsDTO::new);
+        var reservations = service.listReservationsByUser(userId, pagination, filters);
         log.info("Responding a request to list reservations of client with ID: {}", userId);
         return ResponseEntity.ok(reservations);
     }

@@ -35,9 +35,9 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity register(@RequestBody @Valid UserSaveDTO data) {
         log.info("Starting login of user with user: {}", data.login());
-        String token = service.register(data);
+        User user = service.register(data);
         log.info("Returning JWT Token");
-        return ResponseEntity.ok(new UserJsonDTO(token));
+        return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
     @GetMapping

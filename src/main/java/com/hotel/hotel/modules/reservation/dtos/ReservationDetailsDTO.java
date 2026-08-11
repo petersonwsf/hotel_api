@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.reservation.model.Status;
-import com.hotel.hotel.modules.room.dtos.RoomDetailsDTO;
+import com.hotel.hotel.modules.room.dtos.RoomDetailsImageDTO;
 import com.hotel.hotel.modules.user.dtos.UserResponseDTO;
 
 public record ReservationDetailsDTO(
@@ -17,10 +17,10 @@ public record ReservationDetailsDTO(
     BigDecimal totalAmount,
     BigDecimal serviceFee,
     Status status,
-    RoomDetailsDTO room,
+    RoomDetailsImageDTO room,
     UserResponseDTO user
 ) {
-    public ReservationDetailsDTO(Reservation reservation) {
+    public ReservationDetailsDTO(Reservation reservation, RoomDetailsImageDTO room) {
         this(
             reservation.getId(),
             reservation.getCheckInDate(),
@@ -30,7 +30,7 @@ public record ReservationDetailsDTO(
             reservation.getTotalAmount(),
             reservation.getServiceFee(),
             reservation.getStatus(),
-            new RoomDetailsDTO(reservation.getRoom()),
+            room,
             new UserResponseDTO(reservation.getUser())
         );
     }

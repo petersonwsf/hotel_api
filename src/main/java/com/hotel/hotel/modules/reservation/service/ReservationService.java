@@ -2,12 +2,14 @@ package com.hotel.hotel.modules.reservation.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
+import com.hotel.hotel.modules.files.service.FileService;
 import com.hotel.hotel.modules.room.repository.RoomRepository;
 import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.infra.exceptions.RoomNotAvailable;
+import com.hotel.hotel.modules.reservation.dtos.ReservationDetailsDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationEditDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationFilters;
 import com.hotel.hotel.modules.reservation.dtos.ReservationSaveDTO;
@@ -28,6 +31,7 @@ import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.reservation.model.Status;
 import com.hotel.hotel.modules.reservation.repository.ReservationRepository;
 import com.hotel.hotel.modules.reservation.repository.specs.ReservationSpecification;
+import com.hotel.hotel.modules.room.dtos.RoomDetailsImageDTO;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,12 +56,16 @@ public class ReservationService {
     @Autowired
     private ReservationRepository repository;
 
+    @Autowired
+    private FileService fileService;
+
     @Auditable(action = "RESERVATION_CREATE", resourceType = "RESERVATION")
     @Transactional
-    public Reservation create(ReservationSaveDTO data) {
+    public ReservationDetailsDTO create(ReservationSaveDTO data) {
         log.info("Starting process to create reservation for client with ID: {}", data.userId());
         var user = userService.findById(data.userId());
         var room = roomRepository.findById(data.roomId()).orElseThrow(() -> new ResourceNotFoundException("Quarto não encontrado"));
+        var files = fileService.listImagesByRoom(room.getId());
         validateReservationDate(data.checkInDate(), data.checkOutDate(), data.roomId(), null);
         BigDecimal totalAmount = calculateTotalAmount(data.checkInDate(), data.checkOutDate(), data.dailyRate(), data.serviceFee(), data.discountAmount());
         Reservation reservation = new Reservation(data);
@@ -66,10 +74,11 @@ public class ReservationService {
         reservation.setTotalAmount(totalAmount);
         Reservation newReservation = repository.save(reservation);
         log.info("The reservation was successfully created in the database");
-        return newReservation;
+        ReservationDetailsDTO response = new ReservationDetailsDTO(newReservation, new RoomDetailsImageDTO(room, files));
+        return response;
     }
 
-    public Page<Reservation> list(ReservationFilters filters, Pageable pagination) {
+    public Page<ReservationDetailsDTO> list(ReservationFilters filters, Pageable pagination) {
         log.info("Starting process to list reservations");
 
         Specification<Reservation> filter = (root, query, criteriaBuilder) -> null;
@@ -77,24 +86,32 @@ public class ReservationService {
         filter = filter.and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
                 .and(ReservationSpecification.userIdEqual(filters.user()))
                 .and(ReservationSpecification.roomIdEqual(filters.room()))
-                .and(ReservationSpecification.statusEqual(filters.status()));
+                .and(ReservationSpecification.statusIn(filters.status()));
 
         log.info("Returning the reservations list");
-        return repository.findAll(filter, pagination);
+
+        Page<Reservation> reservations = repository.findAll(filter, pagination);
+
+        return reservations.map(reservation -> {
+            var files = fileService.listImagesByRoom(reservation.getRoom().getId());
+            return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
+        });
     }
 
-    public Reservation getById(Long id) {
+    public ReservationDetailsDTO getById(Long id) {
         log.info("Finding reservation with ID: {}", id);
         var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         userHasPermission(reservation);
-        return reservation;
+        var files = fileService.listImagesByRoom(reservation.getRoom().getId());
+        return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
     }
 
     @Transactional
-    public Reservation edit(ReservationEditDTO data, Long id) {
+    public ReservationDetailsDTO edit(ReservationEditDTO data, Long id) {
         log.info("Starting process to edit reservation with ID: {}", id);
-        var reservation = getById(id);
+         var reservation = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         String beforeUpdate = null;
         try {
             beforeUpdate = objectMapper.writeValueAsString(reservation);
@@ -119,14 +136,16 @@ public class ReservationService {
         reservation.setTotalAmount(totalAmount);
         auditService.recordUpdate("RESERVATION_UPDATE", "RESERVATION", String.valueOf(id), beforeUpdate, reservation);
         log.info("Reservation with ID: {} was successfully edited", id);
-        return reservation;
+        var files = fileService.listImagesByRoom(reservation.getRoom().getId());
+        return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
     }
 
     @Transactional
     @Auditable(action = "RESERVATION_CANCEL", resourceType = "RESERVATION")
     public void cancel(Long id) {
         log.info("Canceling reservation with ID: {}" , id);
-        var reservation = getById(id);
+         var reservation = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         userHasPermission(reservation);
         reservation.changeStatus(Status.CANCELED);
         log.info("Reservation with ID: {} successfully canceled" , id);
@@ -136,7 +155,8 @@ public class ReservationService {
     @Auditable(action = "RESERVATION_CONFIRM", resourceType = "RESERVATION")
     public void confirm(Long id) {
         log.info("Confirming reservation with ID: {}" , id);
-        var reservation = getById(id);
+         var reservation = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         userHasPermission(reservation);
         reservation.changeStatus(Status.CONFIRMED);
         log.info("Reservation with ID: {} successfully confirmed" , id);
@@ -146,7 +166,8 @@ public class ReservationService {
     @Transactional
     public void checkIn(Long id) {
         log.info("Checking in to the reservation with ID: {}", id);
-        var reservation = getById(id);
+         var reservation = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         var room = reservation.getRoom();
         userHasPermission(reservation);
         room.changeStatus(StatusRoom.OCCUPIED);
@@ -157,7 +178,8 @@ public class ReservationService {
     @Transactional
     public void checkOut(Long id) {
         log.info("Checking out to the reservation with ID: {}", id);
-        var reservation = getById(id);
+         var reservation = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         var room = reservation.getRoom();
         userHasPermission(reservation);
         room.changeStatus(StatusRoom.CLEANING);
@@ -165,18 +187,36 @@ public class ReservationService {
     }
 
     @Auditable(action = "RESERVATION_LIST_BY_USER", resourceType = "RESERVATION")
-    public Page<Reservation> listReservationsByUser(Long clientId, Pageable pagination) {
+    public Page<ReservationDetailsDTO> listReservationsByUser(Long clientId, Pageable pagination, ReservationFilters filters) {
         log.info("Listing reservations of the client with ID: {}", clientId);
-        Page<Reservation> reservations = repository.findByUserId(clientId, pagination);
-        if (!reservations.isEmpty()) {
-            userHasPermission(reservations.getContent().get(0));
-        }
-        return reservations;
+
+        Specification<Reservation> filter = Specification
+                .where(ReservationSpecification.userIdEqual(clientId))
+                .and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
+                .and(ReservationSpecification.roomIdEqual(filters.room()))
+                .and(ReservationSpecification.statusIn(filters.status()));
+
+        // 3. Busca no banco usando APENAS o Specification filtrado e paginado
+        Page<Reservation> reservationPage = repository.findAll(filter, pagination);
+
+        if (reservationPage.getContent().size() == 0) throw new ResourceNotFoundException("Não há reservas"); 
+        userHasPermission(reservationPage.getContent().get(0));
+
+        // 4. Mapeia para DTO
+        return reservationPage.map(reservation -> {
+            var files = fileService.listImagesByRoom(reservation.getRoom().getId());
+            return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
+        });
     }
 
     private void userHasPermission(Reservation reservation) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
+        if (auth == null || !auth.isAuthenticated()) {
+            return;
+        }
+        if (!(auth.getPrincipal() instanceof User user)) {
+            return;
+        }
         if ((reservation.getUser().getId() != user.getId()) && user.getRole() == Role.CLIENT) throw new AccessResourceDeniedException("Você não tem acesso a este recurso");
     }
 
