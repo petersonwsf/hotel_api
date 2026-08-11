@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
+
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,20 +17,23 @@ import org.springframework.stereotype.Service;
 
 import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
 import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
+import com.hotel.hotel.modules.client.dtos.ClientDetailsDTO;
 import com.hotel.hotel.modules.client.dtos.ClientEditDTO;
 import com.hotel.hotel.modules.client.dtos.ClientFilter;
 import com.hotel.hotel.modules.client.dtos.ClientSaveDTO;
 import com.hotel.hotel.modules.client.model.Client;
 import com.hotel.hotel.modules.client.repository.ClientRepository;
 import com.hotel.hotel.modules.client.repository.specs.ClientSpecification;
+import com.hotel.hotel.modules.files.dto.FileResponse;
+import com.hotel.hotel.modules.files.service.FileService;
 import com.hotel.hotel.modules.user.dtos.UserSaveDTO;
 import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
-import com.hotel.hotel.modules.user.repository.UserRepository;
 import com.hotel.hotel.modules.user.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -44,6 +50,9 @@ public class ClientService {
 
     @Autowired
     private AuditService auditService;
+
+    @Autowired
+    private FileService fileService;
 
 
     @Auditable(action = "CLIENT_CREATE", resourceType = "CLIENT")
@@ -82,7 +91,8 @@ public class ClientService {
     @Transactional
     public Client edit(ClientEditDTO data, Long id) {
         log.info("Starting process to edit client eith ID: {}", id);
-        Client client = getById(id);
+        Client client = repository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         User user = userService.findById(client.getUser().getId());
         String beforeUpdate = null;
         try {
@@ -100,32 +110,47 @@ public class ClientService {
         updateUserByClient(user, data.name(), data.email(), data.contactInformation().phoneNumber());
         client.edit(data);
         auditService.recordUpdate("CLIENT_UPDATE", "CLIENT", String.valueOf(id), beforeUpdate, client);
-        log.info("Client with ID: {} successfully edited");
+        log.info("Client with ID: {} successfully edited"); 
         return client;
     }
 
     @Auditable(action = "CLIENT_DELETE", resourceType = "CLIENT")
     @Transactional
     public void deleteById(Long id) {
-        Client client = getById(id);
+         Client client = repository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         userHasPermission(client);
         client.delete();
     }
 
     @Auditable(action = "CLIENT_GET_BY_ID", resourceType = "CLIENT")
-    public Client getById(Long id) {
+    public ClientDetailsDTO getById(Long id) {
         Client client = repository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
         userHasPermission(client);
-        return client;
+        FileResponse file = fileService.findByMinioKey(client.getUser().getProfilePicture());
+        return new ClientDetailsDTO(client, file);
     }
 
     @Auditable(action = "CLIENT_GET_BY_USER_ID", resourceType = "CLIENT")
-    public Client getClientByUserId(Long id) {
+    public ClientDetailsDTO getClientByUserId(Long id) {
         Client client = repository.findByUserId(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with user id " + id + " does not exists"));
         userHasPermission(client);
-        return client;
+        FileResponse file = fileService.findByMinioKey(client.getUser().getProfilePicture());
+        return new ClientDetailsDTO(client, file);
+    }
+
+    @Transactional
+    public FileResponse updateProfilePicture(MultipartFile file, Long id) {
+        User user = userService.findById(id);
+        if (user.getProfilePicture() != null) {
+            fileService.deleteFromMinio(user.getProfilePicture());
+        }
+        String minioKey = UUID.randomUUID().toString();
+        FileResponse fileResponse = fileService.uploadFile(file, minioKey, null, user);
+        user.setProfilePicture(minioKey);
+        return fileResponse;
     }
 
     private void verifyEmailExists(String email, Long id) {

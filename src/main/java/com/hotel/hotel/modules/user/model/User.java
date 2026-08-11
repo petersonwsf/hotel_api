@@ -46,6 +46,9 @@ public class User implements UserDetails{
     @Column(name = "papel")
     private Role role;
 
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
     public User(UserSaveDTO data) {
         var bcrypt = new BCryptPasswordEncoder();
         this.name = data.name();
