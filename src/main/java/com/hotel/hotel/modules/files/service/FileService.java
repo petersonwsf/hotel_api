@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -70,6 +71,30 @@ public class FileService {
         return images;
     }
 
+    public void deleteFromMinio(String objectName) {
+        try {
+            log.info("Start process to delete object from MinIO: {}", objectName);
+            
+            minioClient.removeObject(
+                    RemoveObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .build()
+            );
+            
+            log.info("Object {} successfully deleted from MinIO", objectName);
+        } catch (ErrorResponseException e) {
+            log.error("MinIO error trying to delete object: {}", objectName, e);
+            throw new MyCustomStorageException(e.getMessage());
+        } catch (IOException e) {
+            log.error("I/O error trying to delete object from MinIO: {}", objectName, e);
+            throw new MyCustomStorageException(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error deleting object from MinIO: {}", objectName, e);
+            throw new RuntimeException("Unexpected error during MinIO deletion", e);
+        }
+    }
+
     @Auditable(action = "FILE_DELETE", resourceType = "FILE")
     public void deleteById(Long id) {
         log.info("Start process to delete file with id: {}", id);
@@ -83,6 +108,15 @@ public class FileService {
         File file = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("File does not exists"));
         String url = getFileUrl(file.getMinioKey());
         return new FileResponse(file, url);
+    }
+
+    public FileResponse findByMinioKey(String minioKey) {
+        Optional<File> file = repository.findByMinioKey(minioKey);
+        if (file.isPresent()) {
+            String url = getFileUrl(file.get().getMinioKey());
+            return new FileResponse(file.get(), url);
+        }
+        return null;
     }
 
     private String getFileUrl(String objectName) {
