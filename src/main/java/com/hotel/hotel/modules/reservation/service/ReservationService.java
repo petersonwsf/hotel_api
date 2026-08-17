@@ -196,13 +196,11 @@ public class ReservationService {
                 .and(ReservationSpecification.roomIdEqual(filters.room()))
                 .and(ReservationSpecification.statusIn(filters.status()));
 
-        // 3. Busca no banco usando APENAS o Specification filtrado e paginado
         Page<Reservation> reservationPage = repository.findAll(filter, pagination);
 
         if (reservationPage.getContent().size() == 0) throw new ResourceNotFoundException("Não há reservas"); 
         userHasPermission(reservationPage.getContent().get(0));
 
-        // 4. Mapeia para DTO
         return reservationPage.map(reservation -> {
             var files = fileService.listImagesByRoom(reservation.getRoom().getId());
             return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
