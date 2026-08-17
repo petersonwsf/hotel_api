@@ -12,15 +12,15 @@ public class ReservationSpecification {
 
     public static Specification<Reservation> checkDateBetween(LocalDate checkIn, LocalDate checkOut) {
         return (root, query, criteriaBuilder) -> {
+            
             if (checkIn == null && checkOut == null) return null;
 
             if (checkIn != null && checkOut == null) {
-                return criteriaBuilder.lessThanOrEqualTo(root.get("checkOutDate"), checkIn);
+                return criteriaBuilder.greaterThanOrEqualTo(root.get("checkInDate"), checkIn);
             }
             if (checkIn == null && checkOut != null) {
-                return criteriaBuilder.greaterThanOrEqualTo(root.get("checkInDate"), checkOut);
+                return criteriaBuilder.lessThanOrEqualTo(root.get("checkOutDate"), checkOut);
             }
-
             return criteriaBuilder.between(root.get("checkInDate"), checkIn, checkOut);
         };
     }
