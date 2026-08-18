@@ -1,7 +1,7 @@
 package com.hotel.hotel.modules.files.service;
 
-import com.hotel.hotel.infra.exceptions.MyCustomStorageException;
-import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
+import com.hotel.hotel.config.exceptions.MyCustomStorageException;
+import com.hotel.hotel.config.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.files.model.File;
@@ -9,8 +9,9 @@ import com.hotel.hotel.modules.files.repository.FileRepository;
 import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.user.model.User;
 import io.minio.*;
-import io.minio.http.Method;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,8 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,10 +36,14 @@ public class FileService {
     @Value("${minio.bucket}")
     private String bucketName;
 
+    @Value("${minio.url}")
+    private String minioUrl;
+
     @Auditable(action = "FILE_UPDATE", resourceType = "FILE")
-    public FileResponse uploadFile(MultipartFile fileData, String objectName, Room room, User user) {
+    public String uploadFile(MultipartFile fileData, Room room, User user) {
         try {
             log.info("Start process to upload file: {}", fileData.getOriginalFilename());
+            String objectName = UUID.randomUUID().toString();
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -50,7 +56,7 @@ public class FileService {
             File file = new File(objectName, fileData, null, room, user);
             repository.save(file);
             log.info("File {} successfully created", fileData.getOriginalFilename());
-            return new FileResponse(file, getFileUrl(objectName));
+            return objectName;
         } catch (ErrorResponseException e) {
             throw new MyCustomStorageException(e.getMessage());
         } catch (IOException e) {
@@ -60,38 +66,45 @@ public class FileService {
         }
     }
 
-    public List<FileResponse> listImagesByRoom(Long id) {
-        log.info("Start process to list images of room with id: {}", id);
-        List<File> listImages = repository.findByRoomId(id);
-        List<FileResponse> images = listImages.stream().map(file -> {
-           String url = getFileUrl(file.getMinioKey());
-           return new FileResponse(file, url);
-        }).toList();
-        log.info("Returning list of images from room with ID: {}", id);
-        return images;
+    @Transactional
+    public void syncRoomImages(Long roomId, List<FileResponse> remainingImages, List<MultipartFile> newImages, Room room) {
+        List<File> currentFiles = repository.findByRoomId(roomId);
+        Set<Long> idsToKeep = remainingImages.stream()
+                .map(FileResponse::id)
+                .collect(Collectors.toSet());
+        currentFiles.stream()
+                .filter(file -> !idsToKeep.contains(file.getId()))
+                .forEach(file -> this.deleteById(file.getId()));
+        this.uploadMultipleFilesForRoom(newImages, room);
     }
 
-    public void deleteFromMinio(String objectName) {
+    @Transactional
+    public void uploadMultipleFilesForRoom(List<MultipartFile> files, Room room) {
+        if (files == null) return;
+        for (MultipartFile file : files) {
+            this.uploadFile(file, room, null);
+        }
+    }
+
+    public List<String> listImagesByRoom(Long id) {
+        log.info("Listing image keys for room ID: {}", id);
+        return repository.findByRoomId(id).stream()
+                .map(File::getMinioKey)
+                .collect(Collectors.toList());
+    }
+
+   public void deleteFromMinio(String objectName) {
         try {
-            log.info("Start process to delete object from MinIO: {}", objectName);
-            
+            log.info("Deleting object from MinIO: {}", objectName);
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(bucketName)
                             .object(objectName)
                             .build()
             );
-            
-            log.info("Object {} successfully deleted from MinIO", objectName);
-        } catch (ErrorResponseException e) {
-            log.error("MinIO error trying to delete object: {}", objectName, e);
-            throw new MyCustomStorageException(e.getMessage());
-        } catch (IOException e) {
-            log.error("I/O error trying to delete object from MinIO: {}", objectName, e);
-            throw new MyCustomStorageException(e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error deleting object from MinIO: {}", objectName, e);
-            throw new RuntimeException("Unexpected error during MinIO deletion", e);
+            log.error("Failed to delete object from MinIO: {}", objectName, e);
+            throw new MyCustomStorageException("Failed to remove file from storage: " + e.getMessage());
         }
     }
 
@@ -104,36 +117,19 @@ public class FileService {
     }
 
     public FileResponse findById(Long id) {
-        System.out.println(id);
-        File file = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("File does not exists"));
-        String url = getFileUrl(file.getMinioKey());
-        return new FileResponse(file, url);
+        File file = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("File does not exist"));
+        return new FileResponse(file, buildPublicUrl(file.getMinioKey()));
     }
 
     public FileResponse findByMinioKey(String minioKey) {
-        Optional<File> file = repository.findByMinioKey(minioKey);
-        if (file.isPresent()) {
-            String url = getFileUrl(file.get().getMinioKey());
-            return new FileResponse(file.get(), url);
-        }
-        return null;
+        return repository.findByMinioKey(minioKey)
+                .map(file -> new FileResponse(file, buildPublicUrl(file.getMinioKey())))
+                .orElse(null);
     }
 
-    private String getFileUrl(String objectName) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                    GetPresignedObjectUrlArgs.builder()
-                            .method(Method.GET)
-                            .bucket(bucketName)
-                            .object(objectName)
-                            .expiry(2, TimeUnit.HOURS)
-                            .build()
-            );
-        } catch (ErrorResponseException e) {
-            throw new MyCustomStorageException(e.getMessage());
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected error during upload", e);
-        }
+    private String buildPublicUrl(String objectName) {
+        return String.format("%s/%s/%s", minioUrl, bucketName, objectName);
     }
 
 }

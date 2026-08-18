@@ -16,8 +16,8 @@ public class FileController {
     private FileService service;
 
     @GetMapping("/room/{id}")
-    public ResponseEntity<List<FileResponse>> listImagesByRoom(@PathVariable Long id) {
-        List<FileResponse> images = service.listImagesByRoom(id);
+    public ResponseEntity<List<String>> listImagesByRoom(@PathVariable Long id) {
+        List<String> images = service.listImagesByRoom(id);
         return ResponseEntity.ok(images);
     }
 

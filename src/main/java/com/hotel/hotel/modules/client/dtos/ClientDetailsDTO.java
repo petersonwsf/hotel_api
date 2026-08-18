@@ -4,10 +4,9 @@ import java.time.LocalDate;
 
 import com.hotel.hotel.modules.client.model.Client;
 import com.hotel.hotel.modules.contactInformation.dtos.ContactInformationDTO;
-import com.hotel.hotel.modules.files.dto.FileResponse;
 
-public record ClientDetailsDTO(Long id, String name, String pin, String email, LocalDate dateOfBirth, ContactInformationDTO contactInformation, Long userId, FileResponse image) {
-    public ClientDetailsDTO(Client client, FileResponse image) {
-        this(client.getId(), client.getName(), client.getPin(), client.getEmail(), client.getDateOfBirth(), new ContactInformationDTO(client.getContactInformation()), client.getUser().getId(), image);
+public record ClientDetailsDTO(Long id, String name, String pin, String email, LocalDate dateOfBirth, ContactInformationDTO contactInformation, Long userId, String imageKey) {
+    public ClientDetailsDTO(Client client) {
+        this(client.getId(), client.getName(), client.getPin(), client.getEmail(), client.getDateOfBirth(), new ContactInformationDTO(client.getContactInformation()), client.getUser().getId(), client.getUser().getProfilePicture());
     }
 }

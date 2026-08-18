@@ -2,29 +2,24 @@ package com.hotel.hotel.modules.client.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
+import com.hotel.hotel.config.exceptions.ResourceAlreadyExists;
+import com.hotel.hotel.config.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
-
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
-import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
-import com.hotel.hotel.modules.client.dtos.ClientDetailsDTO;
 import com.hotel.hotel.modules.client.dtos.ClientEditDTO;
 import com.hotel.hotel.modules.client.dtos.ClientFilter;
 import com.hotel.hotel.modules.client.dtos.ClientSaveDTO;
 import com.hotel.hotel.modules.client.model.Client;
 import com.hotel.hotel.modules.client.repository.ClientRepository;
 import com.hotel.hotel.modules.client.repository.specs.ClientSpecification;
-import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.files.service.FileService;
 import com.hotel.hotel.modules.user.dtos.UserSaveDTO;
 import com.hotel.hotel.modules.user.model.Role;
@@ -89,10 +84,10 @@ public class ClientService {
     }
 
     @Transactional
+    @PreAuthorize("@securityHelper.hasClientPermission(#client)")
     public Client edit(ClientEditDTO data, Long id) {
         log.info("Starting process to edit client eith ID: {}", id);
-        Client client = repository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
+        Client client = getById(id);
         User user = userService.findById(client.getUser().getId());
         String beforeUpdate = null;
         try {
@@ -100,7 +95,6 @@ public class ClientService {
         } catch (JsonProcessingException e) {
             log.warn("Erro ao processar JSON para auditoria " + e);
         }
-        userHasPermission(client);
         if (data.email() != null) {
             verifyEmailExists(data.email(), id);
         }
@@ -116,41 +110,37 @@ public class ClientService {
 
     @Auditable(action = "CLIENT_DELETE", resourceType = "CLIENT")
     @Transactional
+    @PreAuthorize("@securityHelper.hasClientPermission(#client)")
     public void deleteById(Long id) {
-         Client client = repository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
-        userHasPermission(client);
+        Client client = getById(id);
         client.delete();
     }
 
     @Auditable(action = "CLIENT_GET_BY_ID", resourceType = "CLIENT")
-    public ClientDetailsDTO getById(Long id) {
+    @PreAuthorize("@securityHelper.hasClientPermission(#id)")
+    public Client getById(Long id) {
         Client client = repository.findById(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with id " + id + " does not exists"));
-        userHasPermission(client);
-        FileResponse file = fileService.findByMinioKey(client.getUser().getProfilePicture());
-        return new ClientDetailsDTO(client, file);
+        return client;
     }
 
     @Auditable(action = "CLIENT_GET_BY_USER_ID", resourceType = "CLIENT")
-    public ClientDetailsDTO getClientByUserId(Long id) {
+    @PreAuthorize("@securityHelper.hasClientPermission(#id)")
+    public Client getClientByUserId(Long id) {
         Client client = repository.findByUserId(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Client with user id " + id + " does not exists"));
-        userHasPermission(client);
-        FileResponse file = fileService.findByMinioKey(client.getUser().getProfilePicture());
-        return new ClientDetailsDTO(client, file);
+        return client;
     }
 
     @Transactional
-    public FileResponse updateProfilePicture(MultipartFile file, Long id) {
+    public String updateProfilePicture(MultipartFile file, Long id) {
         User user = userService.findById(id);
         if (user.getProfilePicture() != null) {
             fileService.deleteFromMinio(user.getProfilePicture());
         }
-        String minioKey = UUID.randomUUID().toString();
-        FileResponse fileResponse = fileService.uploadFile(file, minioKey, null, user);
+        String minioKey = fileService.uploadFile(file, null, user);
         user.setProfilePicture(minioKey);
-        return fileResponse;
+        return minioKey;
     }
 
     private void verifyEmailExists(String email, Long id) {
@@ -170,14 +160,8 @@ public class ClientService {
     private void verifyPhoneNumberExists(String phoneNumber, Long id) {
         Boolean phoneNumberExists = (id != null)
                 ? repository.existsByContactInformation_PhoneNumberAndIdNot(phoneNumber, id)
-                : repository.existsByEmail(phoneNumber);
+                : repository.existsByContactInformation_PhoneNumber(phoneNumber);
         if (phoneNumberExists) throw new ResourceAlreadyExists("Número de telefone já está sendo utilizado, tente outro");
-    }
-
-    private void userHasPermission(Client client) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
-        if ((client.getUser().getId() != user.getId()) && user.getRole() == Role.CLIENT) throw new AccessResourceDeniedException("Você não tem acesso a este recurso");
     }
 
     @Transactional

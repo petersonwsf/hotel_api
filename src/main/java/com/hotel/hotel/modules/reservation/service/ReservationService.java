@@ -2,27 +2,23 @@ package com.hotel.hotel.modules.reservation.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
+import com.hotel.hotel.config.exceptions.ResourceNotFoundException;
+import com.hotel.hotel.config.exceptions.RoomNotAvailable;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.files.service.FileService;
 import com.hotel.hotel.modules.room.repository.RoomRepository;
-import com.hotel.hotel.modules.user.model.Role;
-import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
-import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
-import com.hotel.hotel.infra.exceptions.RoomNotAvailable;
 import com.hotel.hotel.modules.reservation.dtos.ReservationDetailsDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationEditDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationFilters;
@@ -98,16 +94,17 @@ public class ReservationService {
         });
     }
 
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#id)")
     public ReservationDetailsDTO getById(Long id) {
         log.info("Finding reservation with ID: {}", id);
         var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
-        userHasPermission(reservation);
         var files = fileService.listImagesByRoom(reservation.getRoom().getId());
         return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
     }
 
     @Transactional
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#id)")
     public ReservationDetailsDTO edit(ReservationEditDTO data, Long id) {
         log.info("Starting process to edit reservation with ID: {}", id);
          var reservation = repository.findById(id)
@@ -118,7 +115,6 @@ public class ReservationService {
         } catch (JsonProcessingException e) {
             log.warn("Erro ao processar JSON para auditoria " + e);
         }
-        userHasPermission(reservation);
         validateReservationDate(data.checkInDate(), data.checkOutDate(), reservation.getRoom().getId(), reservation.getId());
 
         if (!data.roomId().equals(reservation.getRoom().getId())) {
@@ -142,46 +138,46 @@ public class ReservationService {
 
     @Transactional
     @Auditable(action = "RESERVATION_CANCEL", resourceType = "RESERVATION")
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#id)")
     public void cancel(Long id) {
         log.info("Canceling reservation with ID: {}" , id);
          var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
-        userHasPermission(reservation);
         reservation.changeStatus(Status.CANCELED);
         log.info("Reservation with ID: {} successfully canceled" , id);
     }
 
     @Transactional
     @Auditable(action = "RESERVATION_CONFIRM", resourceType = "RESERVATION")
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#id)")
     public void confirm(Long id) {
         log.info("Confirming reservation with ID: {}" , id);
          var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
-        userHasPermission(reservation);
         reservation.changeStatus(Status.CONFIRMED);
         log.info("Reservation with ID: {} successfully confirmed" , id);
     }
 
     @Auditable(action = "RESERVATION_CHECKIN", resourceType = "RESERVATION")
     @Transactional
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#id)")
     public void checkIn(Long id) {
         log.info("Checking in to the reservation with ID: {}", id);
          var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         var room = reservation.getRoom();
-        userHasPermission(reservation);
         room.changeStatus(StatusRoom.OCCUPIED);
         reservation.changeStatus(Status.CHECKED_IN);
     }
 
     @Auditable(action = "RESERVATION_CHECKOUT", resourceType = "RESERVATION")
     @Transactional
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#reservation)")
     public void checkOut(Long id) {
         log.info("Checking out to the reservation with ID: {}", id);
          var reservation = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
         var room = reservation.getRoom();
-        userHasPermission(reservation);
         room.changeStatus(StatusRoom.CLEANING);
         reservation.changeStatus(Status.CHECKED_OUT);
     }
@@ -198,24 +194,11 @@ public class ReservationService {
 
         Page<Reservation> reservationPage = repository.findAll(filter, pagination);
 
-        if (reservationPage.getContent().size() == 0) throw new ResourceNotFoundException("Não há reservas"); 
-        userHasPermission(reservationPage.getContent().get(0));
-
+        if (reservationPage.getContent().size() == 0) throw new ResourceNotFoundException("Não há reservas");
         return reservationPage.map(reservation -> {
             var files = fileService.listImagesByRoom(reservation.getRoom().getId());
             return new ReservationDetailsDTO(reservation, new RoomDetailsImageDTO(reservation.getRoom(), files));
         });
-    }
-
-    private void userHasPermission(Reservation reservation) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return;
-        }
-        if (!(auth.getPrincipal() instanceof User user)) {
-            return;
-        }
-        if ((reservation.getUser().getId() != user.getId()) && user.getRole() == Role.CLIENT) throw new AccessResourceDeniedException("Você não tem acesso a este recurso");
     }
 
     private BigDecimal calculateTotalAmount(LocalDate checkIn, LocalDate checkOut, BigDecimal dailyRate, BigDecimal serviceFee, BigDecimal discountAmount) {

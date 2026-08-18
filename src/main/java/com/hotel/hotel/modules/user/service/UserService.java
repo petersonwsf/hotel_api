@@ -2,17 +2,15 @@ package com.hotel.hotel.modules.user.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hotel.hotel.infra.exceptions.AccessResourceDeniedException;
-import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
-import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
-import com.hotel.hotel.infra.security.TokenService;
+import com.hotel.hotel.config.exceptions.ResourceAlreadyExists;
+import com.hotel.hotel.config.exceptions.ResourceNotFoundException;
+import com.hotel.hotel.config.security.TokenService;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
 import com.hotel.hotel.modules.user.dtos.UserEditDTO;
 import com.hotel.hotel.modules.user.dtos.UserFilters;
 import com.hotel.hotel.modules.user.dtos.UserLoginDTO;
 import com.hotel.hotel.modules.user.dtos.UserSaveDTO;
-import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.repository.UserRepository;
 import com.hotel.hotel.modules.user.repository.specs.UserSpecification;
@@ -21,9 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,16 +88,17 @@ public class UserService {
 
     @Auditable(action = "USER_DELETE", resourceType = "USER")
     @Transactional
+    @PreAuthorize("@securityHelper.hasUserPermission(#id)")
     public void delete(Long id) {
         log.info("Deletando usuário com Id: {}", id);
         User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
-        resourceBelongsUser(user);
         user.delete();
         log.info("Usuário com ID: {} deletado com sucesso", id);
     }
 
     @Transactional
-    public User edit(UserEditDTO userData, long id) {
+    @PreAuthorize("@securityHelper.hasUserPermission(#id)")
+    public User edit(UserEditDTO userData, Long id) {
         log.info("Editando usuário com ID: {}", id);
         User user = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         String beforeUpdate = null;
@@ -108,19 +107,12 @@ public class UserService {
         } catch (JsonProcessingException e) {
             log.warn("Não foi possível tratar o JSON para auditoria " + e);
         }
-        resourceBelongsUser(user);
         verifyLoginExists(userData.login(), id);
         verifyPhoneNumberExists(userData.phoneNumber(), id);
         user.edit(userData);
         auditService.recordUpdate("UPDATE_USER", "USER", String.valueOf(id), beforeUpdate, user);
         log.info("Usuário com ID: {} editado com sucesso", id);
         return user;
-    }
-
-    private void resourceBelongsUser(User user) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        User userAuthenticated = (User) auth.getPrincipal();
-        if ((!userAuthenticated.getId().equals(user.getId())) && userAuthenticated.getRole() != Role.ADMIN) throw new AccessResourceDeniedException("Você não tem permissão para este recurso");
     }
 
     private void verifyLoginExists(String login, Long id) {
