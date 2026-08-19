@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra.exceptions;
+package com.hotel.hotel.config.exceptions;
 
 public class MyCustomStorageException extends RuntimeException {
     public MyCustomStorageException(String message) {

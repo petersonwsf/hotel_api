@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.hotel.hotel.infra.dtos.MessageResponse;
+import com.hotel.hotel.config.exceptions.MessageResponse;
 import com.hotel.hotel.modules.reservation.dtos.ReservationDetailsDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationEditDTO;
 import com.hotel.hotel.modules.reservation.dtos.ReservationFilters;

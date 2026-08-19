@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra.rabbitmq;
+package com.hotel.hotel.config.rabbitmq;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra.security;
+package com.hotel.hotel.config.security;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

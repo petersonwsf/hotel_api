@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra.exceptions;
+package com.hotel.hotel.config.exceptions;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

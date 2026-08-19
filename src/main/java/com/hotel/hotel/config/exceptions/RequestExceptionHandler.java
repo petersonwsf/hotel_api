@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra.exceptions;
+package com.hotel.hotel.config.exceptions;
 
 import com.hotel.hotel.modules.audit.AuditEvent;
 import com.hotel.hotel.modules.audit.AuditOutcome;

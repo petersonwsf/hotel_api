@@ -2,9 +2,10 @@ package com.hotel.hotel.modules.room.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hotel.hotel.config.exceptions.ResourceAlreadyExists;
+import com.hotel.hotel.config.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.modules.audit.AuditService;
 import com.hotel.hotel.modules.audit.Auditable;
-import com.hotel.hotel.modules.files.dto.FileResponse;
 import com.hotel.hotel.modules.files.service.FileService;
 import com.hotel.hotel.modules.room.dtos.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import com.hotel.hotel.infra.exceptions.ResourceAlreadyExists;
-import com.hotel.hotel.infra.exceptions.ResourceNotFoundException;
 import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 import com.hotel.hotel.modules.room.repository.RoomRepository;
@@ -58,8 +57,7 @@ public class RoomService {
         log.info("Room successfully created in the database");
 
         for (MultipartFile file : files) {
-            String minioKey = UUID.randomUUID().toString();
-            fileService.uploadFile(file, minioKey, newRoom, null);
+            fileService.uploadFile(file, newRoom, null);
         }
 
         return newRoom;
@@ -82,9 +80,9 @@ public class RoomService {
         Page<Room> rooms = repository.findAll(filter, pagination);
 
         return rooms.map(room -> {
-            List<FileResponse> files = fileService.listImagesByRoom(room.getId());
-            FileResponse cover = files.isEmpty() ? null : files.getFirst();
-            return new RoomListDTO(room, cover);
+            List<String> files = fileService.listImagesByRoom(room.getId());
+            String image = files.isEmpty() ? null : files.getFirst();
+            return new RoomListDTO(room, image);
         });
     }
 
@@ -93,7 +91,7 @@ public class RoomService {
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 
-        List<FileResponse> images = fileService.listImagesByRoom(room.getId());
+        List<String> images = fileService.listImagesByRoom(room.getId());
 
         log.info("Returning details of the room with ID: {}", id);
         return new RoomDetailsImageDTO(room, images);
@@ -105,33 +103,10 @@ public class RoomService {
         var room = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
         String beforeUpdate = null;
-        try {
-            beforeUpdate = objectMapper.writeValueAsString(room);
-        } catch (JsonProcessingException e) {
-            log.warn("Erro ao processar JSON para auditoria " + e);
-        }
+        beforeUpdate = serializeForAudit(room);
 
-        List<FileResponse> existingImages = fileService.listImagesByRoom(room.getId());
-
-        for (FileResponse file : existingImages) {
-            boolean deleted = true;
-            for (FileResponse remainingImages : data.remainingImages()) {
-                if (remainingImages.id() == file.id()) {
-                    deleted = false;
-                }
-            }
-            if (deleted) {
-                fileService.deleteById(file.id());
-            }
-        }
-
-        if (newImages != null) {
-            for (MultipartFile file : newImages) {
-                String minioKey = UUID.randomUUID().toString();
-                fileService.uploadFile(file, minioKey, room, null);
-            }
-        }
-
+        fileService.syncRoomImages(id, data.remainingImages(), newImages, room);
+        
         room.edit(data);
         auditService.recordUpdate("ROOM_UPDATE", "ROOM", String.valueOf(id), beforeUpdate, room);
         log.info("Room with ID: {} successfully edited", id);
@@ -164,4 +139,13 @@ public class RoomService {
         Optional<Room> room = repository.findOne(specFinal);
         return room.isPresent();
     }
+
+    private String serializeForAudit(Room room) {
+    try {
+        return objectMapper.writeValueAsString(room);
+    } catch (JsonProcessingException e) {
+        log.warn("Erro ao processar JSON para auditoria: {}", e.getMessage());
+        return null;
+    }
+}
 }

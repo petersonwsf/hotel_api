@@ -1,4 +1,4 @@
-package com.hotel.hotel.infra.registerActions;
+package com.hotel.hotel.config.registerActions;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.hotel.hotel.infra.security.TokenService;
+import com.hotel.hotel.config.security.TokenService;
 import com.hotel.hotel.modules.user.model.User;
 import com.hotel.hotel.modules.user.repository.UserRepository;
 import com.hotel.hotel.modules.userActions.model.Action;
