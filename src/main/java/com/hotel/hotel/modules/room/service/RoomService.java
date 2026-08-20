@@ -23,10 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -68,7 +66,7 @@ public class RoomService {
         Specification<Room> filter = (root, query, criteriaBuilder) -> null;
 
         filter = filter.and(RoomSpecification.codeEqual(filters.code()))
-                .and(RoomSpecification.roomAvailableOn(filters.checkInDate(), filters.checkOutDate()))
+                .and(RoomSpecification.roomAvailableOn(filters.checkInDate(), filters.checkOutDate(), null))
                 .and(RoomSpecification.activeEqual(filters.active()))
                 .and(RoomSpecification.floorEqual(filters.floor()))
                 .and(RoomSpecification.statusEqual(filters.status()))
@@ -133,9 +131,9 @@ public class RoomService {
     }
 
     @Auditable(action = "VERIFY_DISPONIBILITY", resourceType = "ROOM")
-    public Boolean verifyDisponibility(Long id, LocalDate checkIn, LocalDate checkOut) {
+    public Boolean verifyDisponibility(Long id, VerifyDisponibilityDTO verifyData) {
         Specification<Room> specId = (root, query, cb) -> cb.equal(root.get("id"), id);
-        Specification<Room> specFinal = specId.and(RoomSpecification.roomAvailableOn(checkIn, checkOut));
+        Specification<Room> specFinal = specId.and(RoomSpecification.roomAvailableOn(verifyData.checkIn(), verifyData.checkOut(), verifyData.reservationId()));
         Optional<Room> room = repository.findOne(specFinal);
         return room.isPresent();
     }

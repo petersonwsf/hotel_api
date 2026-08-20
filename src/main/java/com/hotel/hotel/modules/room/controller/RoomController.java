@@ -78,7 +78,7 @@ public class RoomController {
 
     @GetMapping("/disponibility/{id}")
     public ResponseEntity verifyDisponibility(@PathVariable Long id, @Valid VerifyDisponibilityDTO dates) {
-        Boolean disponible = service.verifyDisponibility(id, dates.checkIn(), dates.checkOut());
+        Boolean disponible = service.verifyDisponibility(id, dates);
         return ResponseEntity.ok(disponible);
     }
 }
