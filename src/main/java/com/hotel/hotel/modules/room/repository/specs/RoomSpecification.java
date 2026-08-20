@@ -2,6 +2,7 @@ package com.hotel.hotel.modules.room.repository.specs;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 import com.hotel.hotel.modules.room.model.Category;
 import org.springframework.data.jpa.domain.Specification;
@@ -10,11 +11,12 @@ import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.room.model.Room;
 import com.hotel.hotel.modules.room.model.StatusRoom;
 
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 
 public class RoomSpecification {
 
-    public static Specification<Room> roomAvailableOn(LocalDate checkInDate, LocalDate checkOutDate) {
+    public static Specification<Room> roomAvailableOn(LocalDate checkInDate, LocalDate checkOutDate, Long reservationId) {
          return (root, query, criteriaBuilder) -> {
             if (checkInDate == null || checkOutDate == null) return null;
 
@@ -22,12 +24,17 @@ public class RoomSpecification {
 
             Subquery<Long> subquery = query.subquery(Long.class);
             var reservationRoot = subquery.from(Reservation.class);
+            var predicates = new ArrayList<Predicate>();
+            predicates.add(criteriaBuilder.equal(reservationRoot.get("room").get("id"), root.get("id")));
+            predicates.add(criteriaBuilder.lessThan(reservationRoot.get("checkInDate"), checkOutDate));
+            predicates.add(criteriaBuilder.greaterThan(reservationRoot.get("checkOutDate"), checkInDate));
+                
+            if (reservationId != null) {
+                predicates.add(criteriaBuilder.notEqual(reservationRoot.get("id"), reservationId));
+            }
+
             subquery.select(reservationRoot.get("room").get("id"))
-            .where(
-                criteriaBuilder.equal(reservationRoot.get("room").get("id"), root.get("id")),
-                criteriaBuilder.lessThan(reservationRoot.get("checkInDate"), checkOutDate),
-                criteriaBuilder.greaterThan(reservationRoot.get("checkOutDate"), checkInDate)
-            );
+                .where(predicates.toArray(new Predicate[0]));
 
             return criteriaBuilder.not(criteriaBuilder.exists(subquery));
         };

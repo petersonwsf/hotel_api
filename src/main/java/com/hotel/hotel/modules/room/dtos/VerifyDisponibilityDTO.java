@@ -12,7 +12,8 @@ public record VerifyDisponibilityDTO(
         LocalDate checkIn,
         @NotNull
         @FutureOrPresent(message = "A data de checkOut deve estar no futuro ou momento presente")
-        LocalDate checkOut
+        LocalDate checkOut,
+        Long reservationId // Usado para verificar se o conflito não é causado pela mesma reserva
 ) {
     @AssertTrue(message = "A data de check-out deve ser posterior à data de check-in")
     public boolean isPeriodoValido() {

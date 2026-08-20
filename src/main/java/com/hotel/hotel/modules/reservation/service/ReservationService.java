@@ -117,10 +117,11 @@ public class ReservationService {
         }
         validateReservationDate(data.checkInDate(), data.checkOutDate(), reservation.getRoom().getId(), reservation.getId());
 
-        if (!data.roomId().equals(reservation.getRoom().getId())) {
+        if (data.roomId() != null && !data.roomId().equals(reservation.getRoom().getId())) {
             var newRoom = roomRepository.findById(data.roomId()).orElseThrow(() -> new ResourceNotFoundException("Quarto não encontrado"));
             reservation.assignRoom(newRoom);
         }
+        
         reservation.edit(data);
         log.info("Recalculating values");
         BigDecimal totalAmount = calculateTotalAmount(
