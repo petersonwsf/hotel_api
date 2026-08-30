@@ -68,11 +68,11 @@ public class RoomService {
         filter = filter.and(RoomSpecification.codeEqual(filters.code()))
                 .and(RoomSpecification.roomAvailableOn(filters.checkInDate(), filters.checkOutDate(), null))
                 .and(RoomSpecification.activeEqual(filters.active()))
-                .and(RoomSpecification.floorEqual(filters.floor()))
-                .and(RoomSpecification.statusEqual(filters.status()))
+                .and(RoomSpecification.floorIn(filters.floor()))
+                .and(RoomSpecification.statusIn(filters.status()))
                 .and(RoomSpecification.priceBetween(filters.minPrice(), filters.maxPrice()))
                 .and(RoomSpecification.capacityGreaterThan(filters.capacity()))
-                .and(RoomSpecification.categoryEquals(filters.category()));
+                .and(RoomSpecification.categoryIn(filters.category()));
         log.info("Returning rooms list");
 
         Page<Room> rooms = repository.findAll(filter, pagination);
