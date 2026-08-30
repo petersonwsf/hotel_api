@@ -3,6 +3,7 @@ package com.hotel.hotel.modules.room.repository.specs;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.hotel.hotel.modules.room.model.Category;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,17 +48,17 @@ public class RoomSpecification {
         };
     }
 
-    public static Specification<Room> floorEqual(String floor) {
+    public static Specification<Room> floorIn(List<String> floor) {
         return (root, query, criteriaBuilder) -> {
-            if (floor == null || floor.isBlank()) return null;
-            return criteriaBuilder.equal(root.get("floor"), floor);
+            if (floor == null || floor.isEmpty()) return null;
+            return root.get("floor").in(floor);
         };
     }
 
-    public static Specification<Room> statusEqual(StatusRoom status) {
+    public static Specification<Room> statusIn(List<StatusRoom> status) {
         return (root, query, criteriaBuilder) -> {
-            if (status == null) return null;
-            return criteriaBuilder.equal(root.get("status"), status);
+            if (status == null || status.isEmpty()) return null;
+            return root.get("status").in(status);
         };
     }
 
@@ -89,10 +90,10 @@ public class RoomSpecification {
         };
     }
 
-    public static Specification<Room> categoryEquals(Category category) {
+    public static Specification<Room> categoryIn(List<Category> category) {
         return (root, query, criteriaBuilder) -> {
-            if (category == null) return null;
-            return criteriaBuilder.equal(root.get("category"), category);
+            if (category == null || category.isEmpty()) return null;
+            return root.get("category").in(category);
         };
     }
 }

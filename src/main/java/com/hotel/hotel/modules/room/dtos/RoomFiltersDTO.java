@@ -2,6 +2,7 @@ package com.hotel.hotel.modules.room.dtos;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import com.hotel.hotel.modules.room.model.Category;
 import com.hotel.hotel.modules.room.model.StatusRoom;
@@ -13,11 +14,11 @@ public record RoomFiltersDTO(
     @FutureOrPresent
     LocalDate checkOutDate,
     String code,
-    String floor,
+    List<String> floor,
     BigDecimal minPrice,
     BigDecimal maxPrice,
-    StatusRoom status,
+    List<StatusRoom> status,
     Boolean active,
     Integer capacity,
-    Category category
+    List<Category> category
 ) {}
