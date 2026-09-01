@@ -7,6 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.hotel.hotel.modules.reservation.model.Reservation;
 import com.hotel.hotel.modules.reservation.model.Status;
+import com.hotel.hotel.modules.room.model.Category;
 
 public class ReservationSpecification {
 
@@ -29,6 +30,32 @@ public class ReservationSpecification {
         return (root, query, criteriaBuilder) -> {
             if (status == null || status.isEmpty()) return null;
             return root.get("status").in(status);
+        };
+    }
+
+    public static Specification<Reservation> categoryIn(List<Category> category) {
+        return (root, query, criteriaBuilder) -> {
+            if (category == null || category.isEmpty()) return null;
+            return root.get("room").get("category").in(category);
+        };
+    }
+
+    public static Specification<Reservation> floorIn(List<String> floor) {
+        return (root, query, criteriaBuilder) -> {
+            if (floor == null || floor.isEmpty()) return null;
+            return root.get("room").get("floor").in(floor);
+        };
+    }
+
+    public static Specification<Reservation> userNameContains(String guestName) {
+        return (root, query, criteriaBuilder) -> {
+            if (guestName == null || guestName.trim().isEmpty()) {
+                return null;
+            }
+            return criteriaBuilder.like(
+                criteriaBuilder.lower(root.get("user").get("name")), 
+                "%" + guestName.toLowerCase() + "%"
+            );
         };
     }
 
