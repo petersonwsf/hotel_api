@@ -175,7 +175,7 @@ public class ReservationService {
 
     @Auditable(action = "RESERVATION_CHECKOUT", resourceType = "RESERVATION")
     @Transactional
-    @PreAuthorize("@securityHelper.hasClientReservationPermission(#reservation)")
+    @PreAuthorize("@securityHelper.hasClientReservationPermission(#id)")
     public void checkOut(Long id) {
         log.info("Checking out to the reservation with ID: {}", id);
          var reservation = repository.findById(id)
