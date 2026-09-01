@@ -80,8 +80,10 @@ public class ReservationService {
         Specification<Reservation> filter = (root, query, criteriaBuilder) -> null;
 
         filter = filter.and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
-                .and(ReservationSpecification.userIdEqual(filters.user()))
-                .and(ReservationSpecification.roomIdEqual(filters.room()))
+                .and(ReservationSpecification.categoryIn(filters.category()))
+                .and(ReservationSpecification.floorIn(filters.floor()))
+                .and(ReservationSpecification.statusIn(filters.status()))
+                .and(ReservationSpecification.userNameContains(filters.guestName()))
                 .and(ReservationSpecification.statusIn(filters.status()));
 
         log.info("Returning the reservations list");
@@ -187,10 +189,13 @@ public class ReservationService {
     public Page<ReservationDetailsDTO> listReservationsByUser(Long clientId, Pageable pagination, ReservationFilters filters) {
         log.info("Listing reservations of the client with ID: {}", clientId);
 
-        Specification<Reservation> filter = Specification
-                .where(ReservationSpecification.userIdEqual(clientId))
-                .and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
-                .and(ReservationSpecification.roomIdEqual(filters.room()))
+        Specification<Reservation> filter = (root, query, criteriaBuilder) -> null;
+
+        filter = filter.and(ReservationSpecification.checkDateBetween(filters.checkInDate(), filters.checkOutDate()))
+                .and(ReservationSpecification.categoryIn(filters.category()))
+                .and(ReservationSpecification.floorIn(filters.floor()))
+                .and(ReservationSpecification.statusIn(filters.status()))
+                .and(ReservationSpecification.userNameContains(filters.guestName()))
                 .and(ReservationSpecification.statusIn(filters.status()));
 
         Page<Reservation> reservationPage = repository.findAll(filter, pagination);
