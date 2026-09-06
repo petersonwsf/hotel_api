@@ -24,6 +24,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.hotel.hotel.modules.files.service.FileService;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -40,6 +42,9 @@ public class UserService {
 
     @Autowired
     private AuthenticationManager manager;
+
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     private UserRepository repository;
@@ -72,7 +77,7 @@ public class UserService {
         return user; 
     }
 
-    public Page<User> list(Pageable pagination, UserFilters filters) {
+    public Page<User> list(Pageable pagination, UserFilters filters, Long loggedUserId) {
         log.info("Listando usuários da página {} com tamanho {}", pagination.getPageNumber(), pagination.getPageSize());
         Specification<User> specification = (root, query, criteriaBuilder) -> null;
 
@@ -80,7 +85,9 @@ public class UserService {
                 .and(UserSpecification.filterByName(filters.name()))
                 .and(UserSpecification.filterByPhoneNumber(filters.phoneNumber()))
                 .and(UserSpecification.filterByRole(filters.role()))
-                .and(UserSpecification.filterByLogin(filters.login()));
+                .and(UserSpecification.filterByLogin(filters.login()))
+                .and(UserSpecification.filterByDeleted(filters.deleted()))
+                .and(UserSpecification.ignoreIdUser(loggedUserId));
 
         log.info("Retornando usuáriosda página {} com tamanho {}", pagination.getPageNumber(), pagination.getPageSize());
         return repository.findAll(specification, pagination);
@@ -115,6 +122,17 @@ public class UserService {
         return user;
     }
 
+    @Transactional
+    public String updateProfilePicture(MultipartFile file, Long id) {
+        User user = findById(id);
+        if (user.getProfilePicture() != null) {
+            fileService.deleteFromMinio(user.getProfilePicture());
+        }
+        String minioKey = fileService.uploadFile(file, null, user);
+        user.setProfilePicture(minioKey);
+        return minioKey;
+    }
+
     private void verifyLoginExists(String login, Long id) {
         if (login == null) return;
 
@@ -132,6 +150,6 @@ public class UserService {
                 ? repository.existsByPhoneNumberAndIdNot(phoneNumber, id)
                 : repository.existsByPhoneNumber(phoneNumber);
 
-        if (phoneNumberAlreadyUsed) throw new ResourceAlreadyExists("Login já está em uso, tente outro");
+        if (phoneNumberAlreadyUsed) throw new ResourceAlreadyExists("Número de telefone já está em uso, tente outro");
     }
 }

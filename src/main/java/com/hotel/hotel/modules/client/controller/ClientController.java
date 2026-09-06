@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.hotel.hotel.config.exceptions.MessageResponse;
@@ -90,13 +88,5 @@ public class ClientController {
         Client client = service.getClientByUserId(id);
         log.info("Client with id user: {} successfully retrieved", id);
         return ResponseEntity.ok(new ClientDetailsDTO(client));
-    }
-
-    @PatchMapping(value = "/profilePicture/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity updateProfilePicture(@RequestPart("image") MultipartFile file, @PathVariable long id) {
-        log.info("Recebida requisição para atualizar foto de perfil do ID: {}. Arquivo: {} ({} bytes)", 
-         id, file.getOriginalFilename(), file.getSize());
-        String minioKey = service.updateProfilePicture(file, id);
-        return ResponseEntity.ok(minioKey);
     }
 }

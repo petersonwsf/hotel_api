@@ -132,17 +132,6 @@ public class ClientService {
         return client;
     }
 
-    @Transactional
-    public String updateProfilePicture(MultipartFile file, Long id) {
-        User user = userService.findById(id);
-        if (user.getProfilePicture() != null) {
-            fileService.deleteFromMinio(user.getProfilePicture());
-        }
-        String minioKey = fileService.uploadFile(file, null, user);
-        user.setProfilePicture(minioKey);
-        return minioKey;
-    }
-
     private void verifyEmailExists(String email, Long id) {
         Boolean emailExists = (id != null)
                 ? repository.existsByEmailAndIdNot(email, id)

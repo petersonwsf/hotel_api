@@ -10,8 +10,12 @@ import com.hotel.hotel.modules.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.hotel.hotel.modules.user.model.User;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.http.MediaType;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -41,9 +45,9 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity list(UserFilters filters, Pageable pagination) {
+    public ResponseEntity list(UserFilters filters, Pageable pagination, @AuthenticationPrincipal User loggedUser) {
         log.info("Request to list user");
-        var users = service.list(pagination, filters).map(UserResponseDTO::new);
+        var users = service.list(pagination, filters, loggedUser.getId()).map(UserResponseDTO::new);
         log.info("Returning users list");
         return ResponseEntity.ok(users);
     }
@@ -70,4 +74,11 @@ public class UserController {
         return ResponseEntity.ok(new UserResponseDTO(user));
     }
 
+    @PatchMapping(value = "/profilePicture/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity updateProfilePicture(@RequestPart("image") MultipartFile file, @PathVariable long id) {
+        log.info("Recebida requisição para atualizar foto de perfil do ID: {}. Arquivo: {} ({} bytes)", 
+         id, file.getOriginalFilename(), file.getSize());
+        String minioKey = service.updateProfilePicture(file, id);
+        return ResponseEntity.ok(minioKey);
+    }
 }

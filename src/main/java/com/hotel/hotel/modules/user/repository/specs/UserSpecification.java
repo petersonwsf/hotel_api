@@ -2,6 +2,9 @@ package com.hotel.hotel.modules.user.repository.specs;
 
 import com.hotel.hotel.modules.user.model.Role;
 import com.hotel.hotel.modules.user.model.User;
+
+import java.util.List;
+
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpecification {
@@ -33,10 +36,17 @@ public class UserSpecification {
         };
     }
 
-    public static Specification<User> filterByRole(Role role) {
+    public static Specification<User> ignoreIdUser(Long id) {
+        return (root, query, criteriaBuilder) -> {
+            if (id == null) return null;
+            return criteriaBuilder.notEqual(root.get("id"), id);
+        };
+    }
+
+    public static Specification<User> filterByRole(List<Role> role) {
         return (root, query, criteriaBuilder) -> {
             if (role == null) return null;
-            return criteriaBuilder.equal(root.get("role"), role);
+            return root.get("role").in(role);
         };
     }
 }
